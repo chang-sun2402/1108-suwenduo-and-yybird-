@@ -649,6 +649,122 @@ const originalChat=wcOpenChat;wcOpenChat=function(c){originalChat(c);animateInsi
 const nmIcon=(body)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+body+'</svg>';
 const nmIcons={home:nmIcon('<path d="M4 11 12 4l8 7v10h-6v-7h-4v7H4z"/>'),search:nmIcon('<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>'),menu:nmIcon('<path d="M3 6h18M3 12h18M3 18h18"/>'),mic:nmIcon('<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M6 11v2a6 6 0 0 0 12 0v-2m-6 8v3m-4 0h8"/>'),music:nmIcon('<path d="M9 17V5l12-3v13M9 8l12-3"/><ellipse cx="5" cy="18" rx="4" ry="3"/><ellipse cx="17" cy="16" rx="4" ry="3"/>'),roam:nmIcon('<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5z"/>'),activity:nmIcon('<path d="M3 13h4l3-9 4 16 3-10 2 3h2"/>'),me:nmIcon('<circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/>'),mail:nmIcon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>'),back:nmIcon('<path d="m15 4-8 8 8 8"/>'),play:nmIcon('<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/>'),list:nmIcon('<path d="M3 6h13M3 11h13M3 16h8m7-3v8m-3-3 3 3 3-3"/>'),calendar:nmIcon('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-11 4 2-1v5"/>'),rank:nmIcon('<path d="M3 21V11h5v10m1 0V4h5v17m1 0V8h5v13"/>')};
 let nmCurrent='home';
+
+const nmMentions = [
+ {
+  "name": "米干加一勺",
+  "type": "回复了你的评论",
+  "date": "9月27 日 23:14",
+  "song": "雁南飞",
+  "comment": "也许不在一起比在一起好？",
+  "quote": "也许不在一起比在一起好？",
+  "badge": "",
+  "track": "jm5"
+ },
+ {
+  "name": "脆米不太干",
+  "type": "回复了你的评论",
+  "date": "8月26日 21:08",
+  "song": "綦江走不走pt.2",
+  "comment": "王齐铭才算小镇娃儿",
+  "quote": "小镇娃儿屌",
+  "badge": "",
+  "track": "share7"
+ },
+ {
+  "name": "茗思韩",
+  "type": "回复了你的评论",
+  "date": "8月20日 19:47",
+  "song": "工厂",
+  "comment": "😮‍💨",
+  "quote": "要好久才才能再见到你",
+  "badge": "",
+  "track": "share4"
+ },
+ {
+  "name": "明韩",
+  "type": "回复了你的评论",
+  "date": "8月17日 23:57",
+  "song": "染缸",
+  "comment": "颜色交杂，才是我爱的你",
+  "quote": "可你不必分清每一种颜色的来处。它们在你身上交织，而你的真诚，早已让它们熠熠生辉。",
+  "badge": "",
+  "track": "jm4"
+ },
+ {
+  "name": "舟颂慢半拍",
+  "type": "回复了你的评论",
+  "date": "8月17日 00:09",
+  "song": "爱止痛",
+  "comment": "所以爱不会止痛",
+  "quote": "可明明我们都在痛",
+  "badge": "",
+  "track": "share3"
+ },
+ {
+  "name": "周末寄一首颂",
+  "type": "回复了你的评论",
+  "date": "7月28日 21:33",
+  "song": "陪着你走",
+  "comment": "一直这样陪着你走走到尽头～",
+  "quote": "一直这样陪着你走走到尽头～",
+  "badge": "",
+  "track": "share0"
+ },
+ {
+  "name": "胡先生",
+  "type": "回复了你的评论",
+  "date": "7月16日 22:21",
+  "song": "IN THE RAIN",
+  "comment": "why are you stuttering",
+  "quote": "why are you stuttering",
+  "badge": "",
+  "track": "share2"
+ },
+ {
+  "name": "晨颂歇一周",
+  "type": "回复了你的评论",
+  "date": "7月5日 23：36",
+  "song": "午夜心碎台北",
+  "comment": "讨厌沉默的爱人",
+  "quote": "所以你要像对外人那样，也对我掩埋你的敏感和脆弱吗？就算你声音再小我也会听见，但可以不要一直对我沉默好吗？另外，你就是很适合melody说唱",
+  "badge": "",
+  "track": "share6"
+ },
+ {
+  "name": "米有干",
+  "type": "回复了你的评论",
+  "date": "7月3日00:39",
+  "song": "虚拟",
+  "comment": "😭😭😭",
+  "quote": "谁允许你投降了？固执的幼稚鬼",
+  "badge": "",
+  "track": "share9"
+ },
+ {
+  "name": "周一歌颂",
+  "type": "回复了你的评论",
+  "date": "7月3日 00:13",
+  "song": "虚拟",
+  "comment": "固执的幼稚鬼几头牛都拉不动",
+  "quote": "谁允许你投降了？固执的幼稚鬼",
+  "badge": "",
+  "track": "share9"
+ }
+];
+function renderNeteaseMention(row){
+ const name=escapeChat(row.name), song=escapeChat(row.song);
+ const cover=nmExtraTracks[row.track].cover;
+ const badge=row.badge ? ' · '+escapeChat(row.badge) : '';
+ const quote=row.quote ? '<p class="nm-mention-quote">'+escapeChat(row.quote)+'</p>' : '';
+ return '<article class="nm-mention">'+
+  '<span class="nm-mention-avatar" aria-hidden="true">'+escapeChat([...row.name][0])+'</span>'+
+  '<div><div class="nm-mention-name">'+name+badge+'</div><div class="nm-mention-meta">'+escapeChat(row.type)+' · '+escapeChat(row.date)+'</div></div>'+
+  '<img class="nm-mention-cover" src="'+escapeChat(cover)+'" alt="'+song+'封面">'+
+  '<div class="nm-mention-body"><p>'+escapeChat(row.comment)+'</p>'+quote+
+  '<div class="nm-mention-actions" aria-hidden="true"><span>✎ 回复</span><span>♡ 赞</span><span class="nm-mention-more">⋮</span></div></div></article>';
+}
+
 function nmBlocks(){return '<div class="nm-placeholder-row">'+Array.from({length:3},()=>'<div aria-hidden="true"><div class="nm-placeholder"></div><div class="nm-line"></div><div class="nm-line short"></div></div>').join('')+'</div>';}
 function openNetease(page=nmCurrent){
  nmCurrent=page;const panel=$('panel');panel.classList.add('nm-shell');show('panel');
@@ -688,7 +804,7 @@ openNetease=function(page=nmCurrent){
  }else if(page==='ranking'){
   content.innerHTML='<div class="nm-rank-scroll"><div class="nm-rank-hero"><div class="nm-rank-toolbar"><button class="nm-button" data-nm="home" aria-label="返回">'+nmIcons.back+'</button><span></span><button class="nm-button" data-nm="search" aria-label="搜索">'+nmIcons.search+'</button><span class="nm-rank-more" aria-hidden="true">⋮</span></div><div class="nm-rank-brand">网易云音乐</div><h1>家族榜</h1><p>最近更新：11月8日</p><div class="nm-rank-stats"><span>＋ 收藏</span><i></i><span>▤ 评论</span><i></i><span>↗ 分享</span></div></div><div class="nm-rank-songs"><div class="nm-playall"><span class="nm-redplay">▶</span><strong>播放全部 <small>（8）</small></strong><span class="nm-rank-actions">↓　☷</span></div>'+familySongs.map(([title,artist],i)=>'<div class="nm-song-row"><span class="nm-song-number '+(i<3?'top':'')+'">'+String(i+1).padStart(2,'0')+'</span><div class="nm-song-copy"><div class="nm-song-title">'+title+'</div><div class="nm-song-artist">'+artist+'</div></div><span class="nm-song-more" aria-hidden="true">⋮</span></div>').join('')+'</div></div><div class="nm-rank-player"><div class="nm-record"></div><span>暂无播放歌曲</span><button class="nm-button" disabled aria-label="尚未添加音频">'+nmIcons.play+'</button><button class="nm-button" data-nm="queue" aria-label="播放列表">'+nmIcons.list+'</button></div>';
  }else if(page==='mentions'){
-  content.innerHTML='<section class="nm-mentions-page" aria-label="评论和 @"><header class="nm-mentions-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><h1>评论和 @</h1></header><p class="nm-mentions-empty">暂无评论和提及</p></section>';
+  content.innerHTML='<section class="nm-mentions-page" aria-label="评论和 @"><header class="nm-mentions-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><h1>评论和 @</h1></header><div class="nm-mentions-list">'+nmMentions.map(renderNeteaseMention).join('')+'</div></section>';
  }else if(['fans','likes'].includes(page)){
   const title={fans:'新增粉丝',likes:'赞和通知'}[page];content.innerHTML='<div class="nm-message-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><strong>'+title+'</strong><span style="width:50px"></span></div><div class="nm-message-list"></div>';
  }
@@ -2927,5 +3043,17 @@ renderChatMessages=function(c){if(c!==wcLonggeContact)return wcBeforeLonggeRende
 .nm-mentions-page{flex:1;min-height:0;display:flex;flex-direction:column}
 .nm-mentions-head{height:54px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:0 12px;text-align:center}
 .nm-mentions-head h1{font-size:18px;margin:0;grid-column:2}
-.nm-mentions-empty{margin:auto;color:#6d7280;font-size:14px}
+.nm-mentions-list{min-height:0;overflow:auto;padding:0 16px}
+.nm-mention{display:grid;grid-template-columns:42px minmax(0,1fr) 40px;gap:0 11px;padding-top:18px}
+.nm-mention-avatar{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#e4e9f3;color:#4d5c77}
+.nm-mention-name{font-size:15px;font-weight:650;overflow-wrap:anywhere}
+.nm-mention-meta,.nm-mention-quote{color:#6d7280;font-size:12px}
+.nm-mention-meta{margin-top:3px}
+.nm-mention-cover{width:40px;height:40px;border-radius:5px;object-fit:cover}
+.nm-mention-body{grid-column:2/4;padding:11px 0 18px;border-bottom:1px solid #d9dde3;overflow-wrap:anywhere}
+.nm-mention-body p{margin:0;white-space:pre-wrap}
+.nm-mention-quote{margin-top:9px!important;border-left:3px solid #d8dce2;padding-left:7px}
+.nm-mention-actions{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:12px}
+.nm-mention-actions span{border-radius:18px;background:#fff;border:1px solid #eaecf0;padding:4px 12px}
+.nm-mention-actions .nm-mention-more{margin-left:auto;background:none;border:0;padding-right:3px;color:#6d7280}
 </style></body></html>
