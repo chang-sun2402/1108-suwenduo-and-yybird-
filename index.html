@@ -678,7 +678,7 @@ openNetease=function(page=nmCurrent){
  if(page==='menu')page='messages';
  nmBaseOpen(page);
  const panel=$('panel'),content=$('content');
- panel.classList.toggle('nm-dark',page==='messages'||page==='ranking'||['fans','mentions','likes'].includes(page));
+ panel.classList.toggle('nm-dark',page==='messages'||page==='ranking'||['fans','likes'].includes(page));
  panel.classList.toggle('nm-ranking',page==='ranking');
  content.querySelectorAll('[data-nm="menu"]').forEach(b=>{b.dataset.nm='messages';b.onclick=()=>openNetease('messages');});
  if(page==='messages'){
@@ -687,8 +687,10 @@ openNetease=function(page=nmCurrent){
   content.querySelector('.nm-message-list').innerHTML=rows.map(([key,label,color,art])=>'<button class="nm-message-row" data-nm="'+key+'"><span class="nm-category-avatar" style="background:'+color+'">'+nmIcon(art)+'</span><span class="nm-category-name">'+label+'</span><span class="nm-chevron">›</span></button>').join('');
  }else if(page==='ranking'){
   content.innerHTML='<div class="nm-rank-scroll"><div class="nm-rank-hero"><div class="nm-rank-toolbar"><button class="nm-button" data-nm="home" aria-label="返回">'+nmIcons.back+'</button><span></span><button class="nm-button" data-nm="search" aria-label="搜索">'+nmIcons.search+'</button><span class="nm-rank-more" aria-hidden="true">⋮</span></div><div class="nm-rank-brand">网易云音乐</div><h1>家族榜</h1><p>最近更新：11月8日</p><div class="nm-rank-stats"><span>＋ 收藏</span><i></i><span>▤ 评论</span><i></i><span>↗ 分享</span></div></div><div class="nm-rank-songs"><div class="nm-playall"><span class="nm-redplay">▶</span><strong>播放全部 <small>（8）</small></strong><span class="nm-rank-actions">↓　☷</span></div>'+familySongs.map(([title,artist],i)=>'<div class="nm-song-row"><span class="nm-song-number '+(i<3?'top':'')+'">'+String(i+1).padStart(2,'0')+'</span><div class="nm-song-copy"><div class="nm-song-title">'+title+'</div><div class="nm-song-artist">'+artist+'</div></div><span class="nm-song-more" aria-hidden="true">⋮</span></div>').join('')+'</div></div><div class="nm-rank-player"><div class="nm-record"></div><span>暂无播放歌曲</span><button class="nm-button" disabled aria-label="尚未添加音频">'+nmIcons.play+'</button><button class="nm-button" data-nm="queue" aria-label="播放列表">'+nmIcons.list+'</button></div>';
- }else if(['fans','mentions','likes'].includes(page)){
-  const title={fans:'新增粉丝',mentions:'评论和@提及',likes:'赞和通知'}[page];content.innerHTML='<div class="nm-message-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><strong>'+title+'</strong><span style="width:50px"></span></div><div class="nm-message-list"></div>';
+ }else if(page==='mentions'){
+  content.innerHTML='<section class="nm-mentions-page" aria-label="评论和 @"><header class="nm-mentions-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><h1>评论和 @</h1></header><p class="nm-mentions-empty">暂无评论和提及</p></section>';
+ }else if(['fans','likes'].includes(page)){
+  const title={fans:'新增粉丝',likes:'赞和通知'}[page];content.innerHTML='<div class="nm-message-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><strong>'+title+'</strong><span style="width:50px"></span></div><div class="nm-message-list"></div>';
  }
  content.querySelectorAll('[data-nm]').forEach(b=>b.onclick=()=>openNetease(b.dataset.nm));
 };
@@ -2920,4 +2922,10 @@ const wcLonggeContact=wcContacts.find(c=>c.name==='龙哥');
 wcLonggeContact.preview="来，门没关";
 const wcBeforeLonggeRender=renderChatMessages;
 renderChatMessages=function(c){if(c!==wcLonggeContact)return wcBeforeLonggeRender(c);const body=$('wechat').querySelector('.wc-chatbody');body.innerHTML=wcLonggeMessages.map(m=>{const stamp=m.stamp?'<div class="wc-group-stamp">'+m.stamp+'</div>':'';return stamp+(m.speaker==='陈思罕'?'<div class="wc-message wc-group-message outgoing"><div class="wc-bubble">'+escapeChat(m.text)+'</div>'+wcSelfAvatar()+'</div>':'<div class="wc-message wc-group-message">'+wcAvatar(c)+'<div class="wc-bubble">'+escapeChat(m.text)+'</div></div>');}).join('');body.scrollTop=body.scrollHeight;};
-</script></body></html>
+</script><style>
+#panel.nm-shell:has(.nm-mentions-page){background:#f3f6f9;color:#131426}
+.nm-mentions-page{flex:1;min-height:0;display:flex;flex-direction:column}
+.nm-mentions-head{height:54px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:0 12px;text-align:center}
+.nm-mentions-head h1{font-size:18px;margin:0;grid-column:2}
+.nm-mentions-empty{margin:auto;color:#6d7280;font-size:14px}
+</style></body></html>
