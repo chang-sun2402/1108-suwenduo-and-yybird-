@@ -2107,7 +2107,7 @@ const nmUpdatedStory=[
   "type": "text",
   "speaker": "我",
   "text": "今天笑场的时候脑子里一直是这首歌",
-  "quote": "🐷：[歌曲] 芳草地"
+  "quote": "等待复活码：[歌曲] 芳草地"
  },
  {
   "date": null,
@@ -2723,7 +2723,7 @@ function deliverEmergencySongNotification(){
  if(inNetease&&nmCurrent==='xixi'){openXixiChat();nmEmergencyRead=true;}else if(inNetease&&nmCurrent==='messages')openNetease('messages');
  const banner=document.createElement('button');banner.id='nmEmergencyNotification';banner.className='message-banner nm-emergency-banner';banner.setAttribute('aria-label','网易云音乐，陈浚铭分享歌曲紧急联络人，'+nmEmergencyCaption+'，点击查看');
  banner.innerHTML='<span class="banner-icon" aria-hidden="true"><img src="'+track.cover+'" alt=""></span><span class="banner-copy"><span class="banner-top"><strong>陈浚铭 · 网易云音乐</strong><small>现在</small></span><span class="banner-text">'+escapeChat('[歌曲] 紧急联络人：'+nmEmergencyCaption)+'</span></span>';
- banner.onclick=()=>{closeVirtualKeyboard();banner.remove();openNetease('messages');};phoneRoot.append(banner);
+ banner.onclick=()=>{closeVirtualKeyboard();banner.remove();openNetease('xixi');};phoneRoot.append(banner);
  setTimeout(()=>banner.remove(),8000);
 }
 const nmBeforeEmergencyPreview=openNetease;
