@@ -766,6 +766,7 @@ function renderNeteaseMention(row){
 }
 
 let nmMentionsRead = false;
+let nmLikesRead = false;
 const nmLikeOffsets = [
  [17, 93, 420], [9, 158], [13, 62, 710], [8, 46, 132, 610],
  [11, 48, 520], [23, 188], [7, 81, 362], [19, 170, 660], [14, 47, 298, 800]
@@ -833,13 +834,22 @@ openNetease=function(page=nmCurrent){
  if(page==='messages'){
   content.innerHTML='<div class="nm-message-head"><button class="nm-button" data-nm="home" aria-label="返回">'+nmIcons.back+'</button><strong>我的消息</strong><button class="nm-button" data-nm="search" aria-label="搜索消息">'+nmIcons.search+'</button><button class="nm-button nm-clean" aria-label="清理未读消息">'+nmIcon('<path d="m10 3 4 0 1 6 5 1v3H4v-3l5-1zM7 13l-2 8h14l-2-8M10 17l-1 4"/>')+'</button></div><div class="nm-message-list"></div>';
   const rows=[['fans','新增粉丝','#ff304c','<circle cx="12" cy="7" r="4" fill="white" stroke="none"/><path d="M5 19c0-5 2-8 7-8s7 3 7 8c0 3-14 3-14 0" fill="white" stroke="none"/>'],['mentions','评论和@提及','#348deb','<path d="M21 11a9 9 0 0 1-9 9H5l1-4A9 9 0 1 1 21 11" fill="white" stroke="none"/><path d="M8 9h8M8 13h5" stroke="#348deb" stroke-width="1.8"/>'],['likes','赞和通知','#ffbd2b','<path d="M9 20H5V10h4m1 10V10l4-7c3-1 3 4 2 6h3q3 0 2 4l-1 5q-1 3-5 3z" fill="white" stroke="none"/>']];
-  content.querySelector('.nm-message-list').innerHTML=rows.map(([key,label,color,art])=>'<button class="nm-message-row" data-nm="'+key+'"><span class="nm-category-avatar" style="background:'+color+'">'+nmIcon(art)+'</span><span class="nm-category-name">'+label+'</span>'+(key==='mentions'&&!nmMentionsRead?'<span class="nm-mentions-unread" aria-label="10 条未读消息">10</span>':'')+'<span class="nm-chevron">›</span></button>').join('');
+  const unread = {
+   mentions: nmMentionsRead ? 0 : nmMentions.length,
+   likes: nmLikesRead ? 0 : nmCommentLikes().length
+  };
+  content.querySelector('.nm-message-list').innerHTML=rows.map(([key,label,color,art])=>{
+   const count=unread[key];
+   const badge=count ? '<span class="nm-mentions-unread" aria-label="'+count+' 条未读消息">'+count+'</span>' : '';
+   return '<button class="nm-message-row" data-nm="'+key+'"><span class="nm-category-avatar" style="background:'+color+'">'+nmIcon(art)+'</span><span class="nm-category-name">'+label+'</span>'+badge+'<span class="nm-chevron">›</span></button>';
+  }).join('');
  }else if(page==='ranking'){
   content.innerHTML='<div class="nm-rank-scroll"><div class="nm-rank-hero"><div class="nm-rank-toolbar"><button class="nm-button" data-nm="home" aria-label="返回">'+nmIcons.back+'</button><span></span><button class="nm-button" data-nm="search" aria-label="搜索">'+nmIcons.search+'</button><span class="nm-rank-more" aria-hidden="true">⋮</span></div><div class="nm-rank-brand">网易云音乐</div><h1>家族榜</h1><p>最近更新：11月8日</p><div class="nm-rank-stats"><span>＋ 收藏</span><i></i><span>▤ 评论</span><i></i><span>↗ 分享</span></div></div><div class="nm-rank-songs"><div class="nm-playall"><span class="nm-redplay">▶</span><strong>播放全部 <small>（8）</small></strong><span class="nm-rank-actions">↓　☷</span></div>'+familySongs.map(([title,artist],i)=>'<div class="nm-song-row"><span class="nm-song-number '+(i<3?'top':'')+'">'+String(i+1).padStart(2,'0')+'</span><div class="nm-song-copy"><div class="nm-song-title">'+title+'</div><div class="nm-song-artist">'+artist+'</div></div><span class="nm-song-more" aria-hidden="true">⋮</span></div>').join('')+'</div></div><div class="nm-rank-player"><div class="nm-record"></div><span>暂无播放歌曲</span><button class="nm-button" disabled aria-label="尚未添加音频">'+nmIcons.play+'</button><button class="nm-button" data-nm="queue" aria-label="播放列表">'+nmIcons.list+'</button></div>';
  }else if(page==='mentions'){
   nmMentionsRead=true;
   content.innerHTML='<section class="nm-mentions-page" aria-label="评论和 @"><header class="nm-mentions-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><h1>评论和 @</h1></header><div class="nm-mentions-list">'+nmMentions.map(renderNeteaseMention).join('')+'</div></section>';
  }else if(page==='likes'){
+  nmLikesRead=true;
   content.innerHTML='<section class="nm-mentions-page" aria-label="赞和通知"><header class="nm-mentions-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><h1>赞和通知</h1></header><div class="nm-mentions-list">'+nmCommentLikes().map(renderNeteaseLike).join('')+'</div></section>';
  }else if(page==='fans'){
   content.innerHTML='<div class="nm-message-head"><button class="nm-button" data-nm="messages" aria-label="返回我的消息">'+nmIcons.back+'</button><strong>新增粉丝</strong><span style="width:50px"></span></div><div class="nm-message-list"></div>';
