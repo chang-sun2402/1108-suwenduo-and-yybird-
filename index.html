@@ -451,6 +451,11 @@ wcContacts.find(c => c.name === '🐷').preview = pigHistory.at(-1).text;
 let pigIsTyping=false,typingTimer=null,activeChat=null;
 const chatDelay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function escapeChat(text){return text.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+const pigEmojiClasses = {擦汗:'sweat', 大哭:'cry', 调皮:'playful'};
+function renderPigChatText(text){
+ return escapeChat(text).replace(/\[(擦汗|大哭|调皮)\]/g, (_, name) =>
+  '<span class="wc-inline-emoji wc-emoji-'+pigEmojiClasses[name]+'" role="img" aria-label="'+name+'"></span>');
+}
 function syncPigTitle(){if(activeChat!=='🐷'||$('wechat').classList.contains('hidden'))return;const title=$('wechat').querySelector('.wc-chathead>span');if(title)title.textContent=pigIsTyping?'对方正在输入……':'🐷';}
 function renderChatMessages(c){
  if(activeChat!==c.name)return;
@@ -464,7 +469,7 @@ function renderChatMessages(c){
   if(message.notice)return stamp+'<div class="wc-group-notice">'+escapeChat(message.text)+'</div>';
   const bubble = message.image
    ? '<img class="'+(message.photo ? 'wc-chat-photo' : 'wc-chat-sticker')+'" src="'+escapeChat(message.image)+'" alt="'+escapeChat(message.text)+'">'
-   : '<div class="wc-bubble">'+escapeChat(message.text)+'</div>';
+   : '<div class="wc-bubble">'+renderPigChatText(message.text)+'</div>';
   if(message.outgoing)return stamp+'<div class="wc-message outgoing">'+bubble+wcSelfAvatar()+'</div>';
   return stamp+'<div class="wc-message">'+wcAvatar(c)+bubble+'</div>';
  }).join('');
@@ -1139,6 +1144,10 @@ wcContacts.push(wcCrewGroup);
 .wc-group-stamp,.wc-group-notice{text-align:center;color:#999;font-size:11px;line-height:1.7;padding:12px 20px 5px}
 .wc-chat-sticker,.wc-chat-photo{display:block;object-fit:contain;border-radius:6px}
 .wc-chat-sticker{width:112px;height:130px}
+.wc-inline-emoji{display:inline-block;width:22px;height:22px;vertical-align:-5px;background-image:url('assets/pig-chat-wechat-emoji.png');background-size:156px 475.2px;background-repeat:no-repeat;border-radius:50%}
+.wc-emoji-sweat{background-position:-18px -18.6px}
+.wc-emoji-cry{background-position:-18px -227.4px}
+.wc-emoji-playful{background-position:-18px -364.2px}
 .wc-chat-photo{width:156px;max-width:65%;height:208px;object-position:left top}
 .outgoing .wc-chat-photo{object-position:right top}
 .wc-group-message{padding-top:12px;padding-bottom:12px}.wc-group-copy{max-width:75%;min-width:0}.wc-group-sender{font-size:11px;color:#888;display:block;margin:0 0 5px}.wc-group-copy .wc-bubble{max-width:none;display:inline-block}
