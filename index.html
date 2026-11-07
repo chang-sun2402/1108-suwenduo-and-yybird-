@@ -2774,10 +2774,19 @@ const wcHenryMessages=[
  {
   "speaker": "陈思罕",
   "text": "嗯嗯！🤓"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "函瑞！！！生日快乐🎂🎂🥳！新的一岁也要更快乐更健康更幸福🤓🫶🏻",
+  "stamp": "10月18日 10:18"
+ },
+ {
+  "speaker": "Henry",
+  "text": "谢谢你呀思罕🥰我们都好久没见了，很想你呀，你也要天天开心，我们一起继续前进～"
  }
 ];
 const wcHenryContact=wcContacts.find(c=>c.name==='Henry');
-wcHenryContact.preview="嗯嗯！🤓";
+wcHenryContact.preview=wcHenryMessages.at(-1).text;
 const wcBeforeHenryRender=renderChatMessages;
 renderChatMessages=function(c){if(c!==wcHenryContact)return wcBeforeHenryRender(c);const body=$('wechat').querySelector('.wc-chatbody');body.innerHTML=wcHenryMessages.map(m=>{const stamp=m.stamp?'<div class="wc-group-stamp">'+m.stamp+'</div>':'';return stamp+(m.speaker==='陈思罕'?'<div class="wc-message wc-group-message outgoing"><div class="wc-bubble">'+escapeChat(m.text)+'</div>'+wcSelfAvatar()+'</div>':'<div class="wc-message wc-group-message">'+wcAvatar(c)+'<div class="wc-bubble">'+escapeChat(m.text)+'</div></div>');}).join('');body.scrollTop=body.scrollHeight;};
 </script><script>
