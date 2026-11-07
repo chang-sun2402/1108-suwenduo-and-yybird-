@@ -3402,7 +3402,7 @@ function wcSortedChats(query=''){
 }
 function wcLatestPreview(contact){
  const birthday=wcBirthdayReceived.get(contact)?.messages.at(-1);
- if(birthday)return birthday.text;
+ if(birthday)return (contact.isGroup && birthday.speaker ? birthday.speaker+'：' : '')+(birthday.image ? '[图片]' : birthday.text);
  let message;
  if(contact.name==='🐷'){
   message=pigConversation.at(-1);
@@ -3799,6 +3799,13 @@ const wcBirthdayWishes = [
   "messages": [
    "思罕，生日快乐！这一年辛苦了，能看到你的进步，继续加油。新的一岁也要照顾好身体，保持对舞台的热爱。"
   ]
+ },
+ {
+  name:'勇勇莉莉雯雯罕罕',
+  messages:[
+   {text:'格格也来祝思罕罕小同学生日快乐啦～',speaker:'姐姐'},
+   {text:'[图片]',speaker:'姐姐',image:'assets/family-birthday-photo.jpg'}
+  ]
  }
 ];
 const wcBirthdayReceived = new Map();
@@ -3815,22 +3822,28 @@ renderChatMessages=function(contact){
  const body=$('wechat').querySelector('.wc-chatbody');
  if(!body)return;
  received.unread=0;
- body.insertAdjacentHTML('beforeend','<div class="wc-group-stamp">11月8日 00:00</div>'+received.messages.map(message=>
-  '<div class="wc-message wc-group-message">'+wcAvatar(contact)+'<div class="wc-bubble">'+escapeChat(message.text).replace(/\n/g,'<br>')+'</div></div>').join(''));
+ body.insertAdjacentHTML('beforeend','<div class="wc-group-stamp">11月8日 00:00</div>'+received.messages.map(message=>{
+  const sender=message.speaker ? contact.members.find(person=>person.name===message.speaker) : contact;
+  const content=message.image
+   ? '<img class="wc-chat-photo" src="'+escapeChat(message.image)+'" alt="'+escapeChat(message.text)+'">'
+   : '<div class="wc-bubble">'+escapeChat(message.text).replace(/\n/g,'<br>')+'</div>';
+  return '<div class="wc-message wc-group-message">'+wcAvatar(sender)+'<div class="wc-group-copy">'+(contact.isGroup ? '<span class="wc-group-sender">'+escapeChat(sender.name)+'</span>' : '')+content+'</div></div>';
+ }).join(''));
  body.scrollTop=body.scrollHeight;
 };
 function startBirthdayNotifications(){
  if(wcBirthdayStarted)return;
  wcBirthdayStarted=true;
- const queue=wcBirthdayWishes.flatMap(wish=>wish.messages.map(text=>({contact:wcContacts.find(contact=>contact.name===wish.name),text})));
+ const queue=wcBirthdayWishes.flatMap(wish=>wish.messages.map(message=>({contact:wcContacts.find(contact=>contact.name===wish.name),...(typeof message==='string' ? {text:message} : message)})));
  document.querySelectorAll('.message-banner').forEach(banner=>banner.remove());
  let banner;
  let index=0;
  function deliverNext(){
   if(index===queue.length){banner?.remove();showBirthdayWritingInterlude();return;}
-  const {contact,text}=queue[index++];
+  const {contact,...message}=queue[index++];
+  const text=(contact.isGroup ? message.speaker+'：' : '')+(message.image ? '[图片]' : message.text);
   const received=wcBirthdayReceived.get(contact) || {messages:[],unread:0};
-  received.messages.push({text});
+  received.messages.push(message);
   const inChat=activeChat===contact.name && !$('wechat').classList.contains('hidden');
   if(!inChat)received.unread++;
   wcBirthdayReceived.set(contact,received);
@@ -4062,19 +4075,19 @@ function appendFinalOwnerMessage(text,voice=false){
  refreshPigChat();
 }
 async function runFinalWechatDialogue(){
- await chatDelay(8000);
+ await chatDelay(30000);
  const lines=['十四岁和十五岁没有什么不一样','习惯有陈浚铭在的日子了','所以现在很不习惯，因为没有你','我也想，回到海南','你一直 很傻'];
  for(let index=0;index<lines.length;index++){
-  if(index)await chatDelay(1200);
+  if(index)await chatDelay(4000);
   appendFinalOwnerMessage(lines[index]);
  }
  for(const text of ['陈思罕才傻','你看到了记得删掉这些','谢谢你回答我','但是我不想让他看见']){
-  await pigReply(text,{typingMs:1200});
+  await pigReply(text,{typingMs:4000});
  }
- await chatDelay(1200);
+ await chatDelay(4000);
  appendFinalOwnerMessage('为什么？');
- await pigReply('怕他觉得我傻',{typingMs:1200});
- await chatDelay(1200);
+ await pigReply('怕他觉得我傻',{typingMs:4000});
+ await chatDelay(4000);
  appendFinalOwnerMessage('[语音]',true);
 }
 let endingVoiceAudio=null,pausedMusicForVoice=null;
