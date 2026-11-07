@@ -4100,7 +4100,7 @@ function resumeMusicAfterVoice(){
 function playEndingVoice(button){
  if(!endingVoiceAudio){
   endingVoiceAudio=new Audio('assets/owner-final-voice.wav');
-  endingVoiceAudio.addEventListener('ended',()=>{endingVoiceAudio.currentTime=0;paintEndingVoice(false);resumeMusicAfterVoice();});
+  endingVoiceAudio.addEventListener('ended',()=>{endingVoiceFinished=true;endingVoiceAudio.currentTime=0;paintEndingVoice(false);resumeMusicAfterVoice();maybeShowEndingLetter();});
   endingVoiceAudio.addEventListener('pause',()=>paintEndingVoice(false));
   endingVoiceAudio.addEventListener('error',()=>{paintEndingVoice(false);resumeMusicAfterVoice();});
  }
@@ -4149,4 +4149,22 @@ syncSMSUnreadBadge();
 #apps .app[aria-label="信息"] .icon{overflow:visible}
 .sms-app-unread{position:absolute;top:-6px;right:-7px;z-index:4;display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#ff3b30;color:#fff;font-size:12px;font-weight:500;line-height:1;text-shadow:none;box-shadow:0 1px 3px #0002}
 </style>
+
+<link rel="stylesheet" href="assets/ending-letter.css">
+<script src="assets/ending-letter.js"></script>
+<script>
+let endingVoiceFinished=false,endingNameFinished=false,endingLetterStarted=false;
+function maybeShowEndingLetter(){
+ if(endingLetterStarted || !finalPigDelivered || !endingVoiceFinished || !endingNameFinished)return;
+ endingLetterStarted=true;
+ closeVirtualKeyboard();
+ document.querySelectorAll('.message-banner').forEach(banner=>banner.remove());
+ createEndingLetter(phoneRoot);
+}
+nmSongAudio.addEventListener('ended',()=>{
+ if(nmAudioKind!=='endingName')return;
+ endingNameFinished=true;
+ maybeShowEndingLetter();
+});
+</script>
 </body></html>
