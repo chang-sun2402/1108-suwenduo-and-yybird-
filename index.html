@@ -479,12 +479,15 @@ function renderChatMessages(c){
  body.innerHTML=messages.map(message => {
   const stamp = message.stamp ? '<div class="wc-group-stamp">'+escapeChat(message.stamp)+'</div>' : '';
   if(message.notice)return stamp+'<div class="wc-group-notice">'+escapeChat(message.text)+'</div>';
-  const bubble = message.image
+  const bubble = message.voice
+   ? '<button class="wc-bubble wc-voice-bubble" data-ending-voice aria-label="播放语音，4秒"><span aria-hidden="true">◖)))</span><span>4″</span></button>'
+   : message.image
    ? '<img class="'+(message.photo ? 'wc-chat-photo' : 'wc-chat-sticker')+'" src="'+escapeChat(message.image)+'" alt="'+escapeChat(message.text)+'">'
    : '<div class="wc-bubble">'+renderPigChatText(message.text)+'</div>';
   if(message.outgoing)return stamp+'<div class="wc-message outgoing">'+bubble+wcSelfAvatar()+'</div>';
   return stamp+'<div class="wc-message">'+wcAvatar(c)+bubble+'</div>';
  }).join('');
+ body.querySelectorAll('[data-ending-voice]').forEach(button=>button.onclick=()=>playEndingVoice(button));
  body.scrollTop=body.scrollHeight;syncPigTitle();
 }
 function refreshPigChat(){if(activeChat==='🐷')renderChatMessages(wcContacts.find(c=>c.name==='🐷'));else wcRefreshList();}
@@ -561,6 +564,7 @@ function wcOpenChat(c){
  show('wechat');activeChat=c.name;if(c.name==='🐷'){pigMessageRead=true;$('pigNotification')?.remove();}
  const root=$('wechat');root.innerHTML='<header class="wc-chathead"><button id="wcChatBack" aria-label="返回微信列表">‹</button><span>'+c.name+(c.isGroup?'（'+(c.members.length+1)+'）':'')+'</span>'+(c.isGroup?'<button id="wcGroupInfo" aria-label="查看群成员">···</button>':'')+'</header><div class="wc-chatbody" role="log" aria-live="polite"></div><div class="wc-compose"><span aria-hidden="true">⊙</span><button type="button" class="script-input" id="scriptInput" aria-label="消息输入框，打开虚拟键盘"></button><span aria-hidden="true">☺</span><span aria-hidden="true">⊕</span></div>';
  renderChatMessages(c);syncScriptInput();$('scriptInput').onclick=openVirtualKeyboard;
+ if(c.name==='🐷' && finalPigDelivered)maybePlayFinalSong();
  if(c.isGroup)$('wcGroupInfo').onclick=()=>{const body=root.querySelector('.wc-chatbody');const members=wcVisibleGroupMembers(c);body.innerHTML='<div class="wc-member-grid">'+members.map(m=>'<button class="wc-member">'+wcAvatar(m)+'<span>'+m.name+'</span></button>').join('')+'</div>';body.querySelectorAll('button.wc-member').forEach((b,i)=>b.onclick=()=>members[i].isSelf?openWechat(3):wcOpenChat(members[i]));};
  $('wcChatBack').onclick=()=>{activeChat=null;openWechat();};
 }
@@ -3374,7 +3378,7 @@ function wcLatestPreview(contact){
   message=wcHistorySources.get(contact)?.at(-1);
  }
  if(!message)return '';
- const text=message.image ? (message.photo ? '[图片]' : '[表情包]') : message.text;
+ const text=message.voice ? '[语音]' : message.image ? (message.photo ? '[图片]' : '[表情包]') : message.text;
  if(!contact.isGroup || !message.speaker)return text;
  return message.speaker+'：'+text;
 }
@@ -3435,6 +3439,7 @@ const ownerSMSMessages=[
 let ownerSMSCount=0,ownerSMSBusy=false,ownerSMSDraft='',ownerSMSTyping=false;
 let ownerFreeWriting=false,ownerWishDraft='';
 const ownerBirthdayReplies=[];
+const ownerFreeTranscript=[];
 const ownerSMSThread={number:ownerSMSNumber,time:'23:57',text:ownerSMSMessages[0].text,read:false};
 function isOwnerSMSOpen(){
  return !smsScreen.classList.contains('hidden') && !!$('ownerSMSInput');
@@ -3467,6 +3472,7 @@ openSMSThread=function(index){
   const input=document.createElement('textarea');
   input.id='ownerSMSInput';
   input.rows=1;
+  input.maxLength=5000;
   input.placeholder='思罕会收到所有人的生日祝福哦～';
   input.setAttribute('aria-label','给陈思罕写生日祝福');
   input.value=ownerWishDraft;
@@ -3488,9 +3494,11 @@ function renderOwnerSMS(){
  conversation.innerHTML='<p class="sms-date">11月7日 23:57</p>'+ownerSMSMessages.slice(0,ownerSMSCount).map((message,index)=>
   (index===ownerSMSMessages.length-1?'<p class="sms-date">11月8日 00:00</p>':'')+
   '<div class="sms-bubble'+(message.outgoing?' owner-sms-outgoing':'')+'">'+escapeChat(message.text)+'</div>').join('')+
-  ownerBirthdayReplies.map(text=>'<div class="sms-bubble owner-sms-outgoing">'+escapeChat(text).replace(/\n/g,'<br>')+'</div>').join('');
+  ownerFreeTranscript.map(message=>(message.stamp?'<p class="sms-date">'+escapeChat(message.stamp)+'</p>':'')+'<div class="sms-bubble'+(message.outgoing?' owner-sms-outgoing':'')+'">'+escapeChat(message.text).replace(/\n/g,'<br>')+'</div>').join('')+
+  '<p id="blessingSaveStatus" class="blessing-save-status" role="status"></p>';
  conversation.scrollTop=conversation.scrollHeight;
  syncOwnerSMSInput();
+ paintBlessingSaveStatus();
 }
 function syncOwnerSMSInput(){
  const input=$('ownerSMSInput');
@@ -3556,9 +3564,12 @@ function sendOwnerBirthdayReply(){
  const text=ownerWishDraft.trim();
  if(!ownerFreeWriting || !text)return;
  ownerBirthdayReplies.push(text);
+ ownerFreeTranscript.push({text,outgoing:true});
+ queueBirthdayWish(text);
+ startAfterBirthdayStory();
  ownerWishDraft='';
  ownerSMSThread.text=text;
- ownerSMSThread.time='00:00';
+ ownerSMSThread.time=$('statusTime').textContent;
  renderOwnerSMS();
  $('ownerSMSInput')?.focus({preventScroll:true});
 }
@@ -3570,7 +3581,10 @@ const storyClockStages = {
  smsArrived:{minute:23*60+57, ceiling:23*60+57, tickMs:20000},
  smsExchange:{minute:23*60+58, ceiling:23*60+58, tickMs:20000},
  smsReveal:{minute:23*60+59, ceiling:23*60+59, tickMs:20000},
- midnight:{minute:24*60, ceiling:24*60, tickMs:20000}
+ midnight:{minute:24*60, ceiling:24*60, tickMs:20000},
+ wishSent:{minute:24*60, ceiling:24*60+2, tickMs:2000},
+ ownerThanks:{minute:24*60+3, ceiling:24*60+3, tickMs:20000},
+ finalWechat:{minute:24*60+4, ceiling:24*60+4, tickMs:20000}
 };
 let storyClockStage='initial';
 let storyClockMinute=storyClockStages.initial.minute;
@@ -3836,5 +3850,195 @@ async function showBirthdayWritingInterlude(){
 .birthday-notification .banner-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
 .birthday-notification .banner-icon{background:transparent;border-radius:10px;overflow:hidden}
 .birthday-notification .banner-icon .wc-avatar{width:43px;height:43px;border-radius:10px}
+</style>
+<script>
+const birthdayCollectionURL='https://phone-1108-suwenduo777-1622.vercel.app/api/blessings';
+const birthdayOutboxKey='phone1108-birthday-outbox-v1';
+let birthdayOutbox=[];
+try{
+ const saved=JSON.parse(localStorage.getItem(birthdayOutboxKey)||'[]');
+ if(Array.isArray(saved))birthdayOutbox=saved.filter(row=>typeof row.id==='string'&&typeof row.text==='string'&&row.text.length<=5000);
+}catch{}
+let birthdayOutboxBusy=false,birthdaySaveFailed=false,birthdayRetryTimer=null;
+function persistBirthdayOutbox(){
+ try{localStorage.setItem(birthdayOutboxKey,JSON.stringify(birthdayOutbox));}catch{}
+}
+function queueBirthdayWish(text){
+ birthdayOutbox.push({id:crypto.randomUUID(),text});
+ persistBirthdayOutbox();
+ flushBirthdayOutbox();
+}
+function paintBlessingSaveStatus(){
+ const status=$('blessingSaveStatus');
+ if(!status)return;
+ status.replaceChildren();
+ if(birthdaySaveFailed && birthdayOutbox.length){
+  const retry=document.createElement('button');
+  retry.type='button';
+  retry.textContent='祝福还在等待保存，点此重试';
+  retry.onclick=flushBirthdayOutbox;
+  status.append(retry);
+ }else{
+  status.textContent=birthdayOutbox.length?'祝福保存中…':ownerBirthdayReplies.length?'祝福已保存':'';
+ }
+}
+async function flushBirthdayOutbox(){
+ if(birthdayOutboxBusy || !birthdayOutbox.length)return;
+ birthdayOutboxBusy=true;
+ birthdaySaveFailed=false;
+ clearTimeout(birthdayRetryTimer);
+ paintBlessingSaveStatus();
+ try{
+  while(birthdayOutbox.length){
+   const item=birthdayOutbox[0];
+   const response=await fetch(birthdayCollectionURL,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(item),signal:AbortSignal.timeout(15000)
+   });
+   if(!response.ok || !(await response.json()).saved)throw new Error('Save unavailable');
+   birthdayOutbox.shift();
+   persistBirthdayOutbox();
+  }
+ }catch{
+  birthdaySaveFailed=true;
+  birthdayRetryTimer=setTimeout(flushBirthdayOutbox,30000);
+ }finally{
+  birthdayOutboxBusy=false;
+  paintBlessingSaveStatus();
+ }
+}
+window.addEventListener('online',flushBirthdayOutbox);
+flushBirthdayOutbox();
+
+const ownerBirthdayThanks='谢谢你啊，虽然我还不知道你叫什么长什么样子，但是谢谢你的生日祝福，谢谢你的帮忙，你以后也要开心健康，永远拥有自由拥有爱';
+let afterBirthdayStarted=false,finalSongDelivered=false,finalSongRead=false,finalSongEntered=false,finalPigDelivered=false;
+nmExtraTracks.endingName={title:'刻在我心底的名字',artist:'',src:'',cover:''};
+async function startAfterBirthdayStory(){
+ if(afterBirthdayStarted)return;
+ afterBirthdayStarted=true;
+ setStoryClockStage('wishSent');
+ await chatDelay(6000);
+ setStoryClockStage('ownerThanks');
+ ownerFreeTranscript.push({text:ownerBirthdayThanks,stamp:'11月8日 00:03'});
+ ownerSMSThread.text=ownerBirthdayThanks;
+ ownerSMSThread.time='00:03';
+ if(isOwnerSMSOpen())renderOwnerSMS();
+ else ownerSMSThread.read=false;
+ await chatDelay(1000);
+ deliverFinalSongShare();
+}
+function deliverFinalSongShare(){
+ if(finalSongDelivered)return;
+ finalSongDelivered=true;
+ nmUpdatedStory.push({date:'11月8日 00:03',type:'song',speaker:'🐷',title:'刻在我心底的名字',text:'',kind:'endingName'});
+ if(nmCurrent==='xixi' && !$('panel').classList.contains('hidden'))openXixiChat();
+ const banner=document.createElement('button');
+ banner.id='finalSongNotification';
+ banner.className='message-banner nm-emergency-banner';
+ banner.setAttribute('aria-label','网易云音乐，等待复活码分享歌曲刻在我心底的名字，点击查看');
+ banner.innerHTML='<span class="banner-icon" aria-hidden="true">♪</span><span class="banner-copy"><span class="banner-top"><strong>等待复活码 · 网易云音乐</strong><small>现在</small></span><span class="banner-text">[歌曲] 刻在我心底的名字</span></span>';
+ banner.onclick=()=>{closeVirtualKeyboard();closeGoosePlayer();banner.remove();openNetease('xixi');};
+ phoneRoot.append(banner);
+ playMessageSound();
+ setTimeout(()=>banner.remove(),8000);
+}
+const nmBeforeFinalShare=openNetease;
+openNetease=function(page=nmCurrent){
+ nmBeforeFinalShare(page);
+ if(!finalSongDelivered)return;
+ if(page==='messages'){
+  const row=$('content').querySelector('.nm-xixi-row');
+  if(row){
+   row.querySelector('small').textContent='[歌曲] 刻在我心底的名字';
+   row.querySelector('time').textContent='00:03';
+   row.querySelector('.nm-emergency-dot')?.remove();
+   if(!finalSongRead){
+    const dot=document.createElement('span');
+    dot.className='nm-emergency-dot';
+    dot.setAttribute('aria-label','未读消息');
+    row.append(dot);
+   }
+  }
+ }
+ if(page==='xixi'){
+  finalSongRead=true;
+  $('finalSongNotification')?.remove();
+  if(!finalSongEntered){finalSongEntered=true;setTimeout(deliverFinalPigMessage,5000);}
+ }
+};
+const finalPigLetter='我猜你现在看不到这些话，那允许我任性一次呗。客套话微博里都说完了，这里本来也想扔下“生日快乐”就走的，耳机里的BGM却不允许我轻易放过这次机会。掰着手指头数我们多久没见了呢，从十四岁到十五岁到底有什么不一样吗，好想听你亲口回答我。陈思罕，你怎么十五岁了啊。第一次见你的时候你还没有我高呢，时间怎么能这么快呢，你现在习惯这样的生活了吗？习惯有我在的日子了吗？不对，你现在应该又回到了我不在的生活。重庆怎么离深圳那么远啊，地理这门课我不喜欢，但是我总是在课上研究地图，我甚至考虑过偷偷买张票去找你，但我好像也没有想你到这种地步。我更想买张票回到海南，你想吗？想回到3月20号那天下午，导演夸我们演得好，可是我们哪有什么演技，只是看着你，我忍不住露出陈浚铭的样子，难道这就是他说的让我演我自己吗？原来如此，我怎么这么笨，现在才懂。对啊我怎么这么傻，怎么不勇敢一点，不主动和你保持联络，可你怎么忍心就这样看着我们的聊天记录走向终点。唉算了，我又在自怨自哀了。陈思罕，生日快乐，我是认真地，祝福你快乐。';
+function deliverFinalPigMessage(){
+ if(finalPigDelivered)return;
+ finalPigDelivered=true;
+ setStoryClockStage('finalWechat');
+ pigConversation.push({text:finalPigLetter,outgoing:false,stamp:'11月8日 00:04'});
+ const inChat=activeChat==='🐷' && !$('wechat').classList.contains('hidden');
+ pigMessageRead=inChat;
+ refreshPigChat();
+ const contact=wcContacts.find(person=>person.name==='🐷');
+ const banner=document.createElement('button');
+ banner.id='finalPigNotification';
+ banner.className='message-banner birthday-notification';
+ banner.setAttribute('aria-label','微信，🐷：'+finalPigLetter+'，点击查看');
+ banner.innerHTML='<span class="banner-icon">'+wcAvatar(contact)+'</span><span class="banner-copy"><span class="banner-top"><strong>🐷</strong><small>现在</small></span><span class="banner-text">'+escapeChat(finalPigLetter)+'</span></span>';
+ banner.onclick=()=>{closeVirtualKeyboard();closeGoosePlayer();banner.remove();wcOpenChat(contact);};
+ phoneRoot.append(banner);
+ playMessageSound();
+ banner.animate([{transform:'translateY(calc(-100% - 70px))'},{transform:'translateY(0)'}],{duration:reducedMotion()?0:280,easing:'ease-out'});
+ setTimeout(()=>banner.remove(),8000);
+ runFinalWechatDialogue();
+}
+function maybePlayFinalSong(){
+ if(!nmSongAudio.paused && !nmSongAudio.ended)return;
+ if(!nmSongAudioSources.endingName)return;
+ nmSelectAudio('endingName');
+ nmRememberSong('endingName');
+ nmSongAudio.play().catch(()=>{});
+}
+function appendFinalOwnerMessage(text,voice=false){
+ pigConversation.push(voice?{text:'[语音]',outgoing:true,voice:'assets/owner-final-voice.wav'}:{text,outgoing:true});
+ refreshPigChat();
+}
+async function runFinalWechatDialogue(){
+ await chatDelay(8000);
+ const lines=['十四岁和十五岁没有什么不一样','习惯有陈浚铭在的日子了','所以现在很不习惯，因为没有你','我也想，回到海南','你一直 很傻'];
+ for(let index=0;index<lines.length;index++){
+  if(index)await chatDelay(1500);
+  appendFinalOwnerMessage(lines[index]);
+ }
+ for(const text of ['陈思罕才傻','你看到了记得删掉这些','谢谢你回答我','但是我不想让他看见']){
+  await pigReply(text,{typingMs:1500});
+ }
+ await chatDelay(1500);
+ appendFinalOwnerMessage('为什么？');
+ await pigReply('怕他觉得我傻',{typingMs:1500});
+ await chatDelay(1500);
+ appendFinalOwnerMessage('[语音]',true);
+}
+let endingVoiceAudio=null;
+function playEndingVoice(button){
+ if(!endingVoiceAudio){
+  endingVoiceAudio=new Audio('assets/owner-final-voice.wav');
+  endingVoiceAudio.addEventListener('ended',()=>{endingVoiceAudio.currentTime=0;paintEndingVoice(false);});
+  endingVoiceAudio.addEventListener('pause',()=>paintEndingVoice(false));
+ }
+ if(!endingVoiceAudio.paused){endingVoiceAudio.pause();return;}
+ endingVoiceAudio.play().then(()=>paintEndingVoice(true)).catch(()=>{button.setAttribute('aria-label','语音未能播放，点击重试');});
+}
+function paintEndingVoice(playing){
+ document.querySelectorAll('[data-ending-voice]').forEach(button=>{
+  button.classList.toggle('is-playing',playing);
+  button.setAttribute('aria-label',(playing?'暂停':'播放')+'语音，4秒');
+ });
+}
+</script>
+<style>
+.blessing-save-status{font-size:11px;color:#929298;text-align:right;align-self:flex-end;margin:0}
+.blessing-save-status:empty{display:none}
+.blessing-save-status button{color:#747b87;background:transparent;font-size:11px}
+.wc-voice-bubble{display:flex;align-items:center;justify-content:space-between;gap:28px;min-width:116px;cursor:pointer;font:inherit;text-align:left}
+.wc-voice-bubble.is-playing>span:first-child{animation:voicePulse .7s ease-in-out infinite alternate}
+@keyframes voicePulse{from{opacity:.35}to{opacity:1}}
+#finalSongNotification .banner-icon{color:white;font-size:28px}
 </style>
 </body></html>

@@ -1,0 +1,14 @@
+{
+  "name": "phone-1108-blessings",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.2"
+  },
+  "overrides": {
+    "zod": "^4.6.6"
+  }
+}
