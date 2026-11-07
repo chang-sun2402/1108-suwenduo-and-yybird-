@@ -24,14 +24,56 @@
    '生日快乐。'
   ],birthdayIndex:5}
  ];
- window.createEndingLetter=function(host,{speed=1,onComplete=()=>{},onExit=()=>{},videoSrc=endingIntroSource}={}){
+
+ const characterWeight=character=>/[。！？]/.test(character)?380:/[，；：]/.test(character)?160:48;
+ function buildLetterTimeline(durationMs){
+  let variable=1100;
+  letters.forEach(letter=>{
+   variable+=[...letter.title].length*85+1100;
+   variable+=letter.paragraphs.reduce((sum,text)=>sum+[...text].reduce((n,c)=>n+characterWeight(c),0),0)+(letter.paragraphs.length-1)*1100;
+  });
+  // Keep the ten-second reading pause and the fade at their requested lengths.
+  const fixedScale=Math.min(1,durationMs/30000),fixedMs=13600*fixedScale;
+  const scale=Math.max(0,(durationMs-fixedMs)/variable);
+  const cues=[];let time=1100*scale;
+  const add=(type,detail={})=>cues.push({at:time,type,...detail});
+  letters.forEach((letter,stage)=>{
+   add('begin',{stage,title:letter.title});
+   for(const character of letter.title){time+=85*scale;add('title',{character});}
+   time+=1100*scale;
+   letter.paragraphs.forEach((text,index)=>{
+    add('paragraph',{text,birthday:index===letter.birthdayIndex});
+    for(const character of text){time+=characterWeight(character)*scale;add('character',{character});}
+    add('paragraph-end');
+    if(index<letter.paragraphs.length-1)time+=1100*scale;
+   });
+   if(stage<letters.length-1){
+    add('holding');time+=10000*fixedScale;
+    add('fading',{duration:3000*fixedScale});time+=3000*fixedScale;
+    add('black');time+=600*fixedScale;
+   }
+  });
+  // Anchor the final punctuation to the end of the song, avoiding timer drift.
+  cues[cues.length-2].at=durationMs;cues[cues.length-1].at=durationMs;
+  cues.push({at:durationMs,type:'complete'});
+  return {cues,durationMs,scale};
+ }
+ window.endingLetterTiming=durationMs=>{
+  const plan=buildLetterTimeline(durationMs);
+  return {durationMs,typingScale:plan.scale,firstCompleteMs:plan.cues.find(c=>c.type==='holding').at,secondStartsMs:plan.cues.find(c=>c.type==='begin'&&c.stage===1).at};
+ };
+ window.createEndingLetter=function(host,{speed=1,onComplete=()=>{},onExit=()=>{},videoSrc=endingIntroSource,syncAudio=null,durationMs=null}={}){
   let cancelled=false,timer=null,complete=false,follow=true,currentSpeed=speed,introVideo=null,introLayer=null;
+  let frame=null,videoStarted=false,cueIndex=0,currentParagraph=null,fade=null,lastElapsed=-1;
+  let virtualElapsed=0,virtualChangedAt=performance.now();
+  const songStart=syncAudio?syncAudio.currentTime:0;
+  const span=Math.max(1,durationMs??(syncAudio?(syncAudio.duration-songStart)*1000:160104));
+  const plan=buildLetterTimeline(span);
   const overlay=document.createElement('section');
   overlay.className='ending-letter';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','suwenduo_与yybird来电');overlay.tabIndex=-1;
   overlay.innerHTML='<div class="ending-letter-scroll"><article><header></header><div class="ending-letter-copy"></div><span class="ending-letter-period" aria-hidden="true">·</span></article></div>';
   host.append(overlay);
-  const scroll=overlay.querySelector('.ending-letter-scroll'),copy=overlay.querySelector('.ending-letter-copy');
-  const title=overlay.querySelector('header');
+  const scroll=overlay.querySelector('.ending-letter-scroll'),copy=overlay.querySelector('.ending-letter-copy'),article=overlay.querySelector('article'),title=overlay.querySelector('header');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let userScrolling=false;
   const pauseFollow=()=>{userScrolling=true;follow=false;};
@@ -48,7 +90,6 @@
     copy.append(...letter.paragraphs.map((text,i)=>paragraphNode(text,i,letter)));
    });
   };
-
   const disposeIntro=()=>{
    if(introVideo){introVideo.pause();introVideo.removeAttribute('src');introVideo.load();introVideo=null;}
    introLayer?.remove();introLayer=null;
@@ -68,49 +109,52 @@
    video.addEventListener('ended',resolve,{once:true});
    introLayer.append(video,status,play);overlay.append(introLayer);video.src=videoSrc;attempt();
   });
+
   function finish(){if(complete)return;complete=true;overlay.dataset.stage='complete';overlay.classList.add('is-complete');onComplete();}
-  (async()=>{
-   await delay(reduced?0:1100);if(cancelled)return;
-   if(videoSrc){
-    await playIntro();if(cancelled)return;
-    disposeIntro();overlay.dataset.stage='video-black';
-    await delay(reduced?0:900);if(cancelled)return;
+  function detachAudio(){if(syncAudio)for(const event of ['timeupdate','seeked','ended'])syncAudio.removeEventListener(event,render);}
+  async function playClosingVideo(){
+   if(cancelled||videoStarted)return;
+   videoStarted=true;cancelAnimationFrame(frame);detachAudio();
+   overlay.dataset.stage='video-black';article.style.transition=reduced?'none':'opacity .6s ease';article.style.opacity='0';
+   await delay(reduced?0:600);if(cancelled)return;
+   if(videoSrc){await playIntro();if(cancelled)return;disposeIntro();}
+   await delay(reduced?0:500);if(cancelled)return;
+   overlay.remove();onExit();
+  }
+  function applyCue(cue){
+   switch(cue.type){
+    case 'begin':
+     overlay.dataset.stage=String(cue.stage);overlay.classList.add('is-visible');overlay.classList.remove('is-complete');
+     article.style.transition='';article.style.opacity='';title.textContent=reduced?cue.title:'';copy.replaceChildren();scroll.scrollTop=0;follow=true;userScrolling=false;fade=null;break;
+    case 'title':if(!reduced)title.append(document.createTextNode(cue.character));break;
+    case 'paragraph':currentParagraph=document.createElement('p');if(cue.birthday)currentParagraph.classList.add('ending-letter-birthday');if(reduced)currentParagraph.textContent=cue.text;else currentParagraph.classList.add('is-typing');copy.append(currentParagraph);reveal();break;
+    case 'character':if(!reduced)currentParagraph.append(document.createTextNode(cue.character));reveal();break;
+    case 'paragraph-end':currentParagraph.classList.remove('is-typing');break;
+    case 'holding':overlay.dataset.stage='holding';break;
+    case 'fading':overlay.dataset.stage='fading';article.style.transition='none';fade=cue;break;
+    case 'black':overlay.dataset.stage='between-letters';article.style.opacity='0';fade=null;break;
+    case 'complete':finish();break;
    }
-   for(let stage=0;stage<letters.length;stage++){
-    const letter=letters[stage];overlay.dataset.stage=String(stage);overlay.classList.add('is-visible');title.textContent='';
-    for(const character of letter.title){if(cancelled)return;title.textContent+=character;await delay(reduced?0:85);}
-    await delay(reduced?0:1100);
-    for(let index=0;index<letter.paragraphs.length;index++){
-     if(cancelled)return;
-     const p=paragraphNode('',index,letter);p.classList.add('is-typing');copy.append(p);
-     if(reduced){p.textContent=letter.paragraphs[index];}
-     else for(const character of letter.paragraphs[index]){if(cancelled)return;p.append(document.createTextNode(character));reveal();await delay(/[。！？]/.test(character)?380:/[，；：]/.test(character)?160:48);}
-     p.classList.remove('is-typing');reveal();
-     if(index<letter.paragraphs.length-1)await delay(reduced?0:1100);
-    }
-    if(stage<letters.length-1){
-     overlay.dataset.stage='holding';
-     await delay(10000);if(cancelled)return;
-     overlay.dataset.stage='fading';
-     overlay.style.setProperty('--ending-fade-duration',(reduced?0:3000/currentSpeed)+'ms');
-     overlay.classList.add('is-fading');
-     await delay(reduced?0:3000);if(cancelled)return;
-     overlay.classList.remove('is-visible');copy.replaceChildren();title.textContent='';scroll.scrollTop=0;follow=true;userScrolling=false;
-     overlay.classList.remove('is-fading');
-     await delay(reduced?0:600);if(cancelled)return;
-    }
-   }
-   if(!cancelled){
-    finish();
-    await delay(10000);if(cancelled)return;
-    overlay.remove();onExit();
-   }
-  })();
+  }
+  function elapsed(){return syncAudio?Math.min(span,Math.max(0,(syncAudio.currentTime-songStart)*1000)):Math.min(span,virtualElapsed+(performance.now()-virtualChangedAt)*currentSpeed);}
+  function render(){
+   if(cancelled||videoStarted)return;
+   cancelAnimationFrame(frame);
+   const time=syncAudio?.ended?span:elapsed();
+   if(time<lastElapsed-.5){cueIndex=0;complete=false;fade=null;overlay.classList.remove('is-visible','is-complete');article.style.opacity='';title.textContent='';copy.replaceChildren();}
+   while(cueIndex<plan.cues.length&&plan.cues[cueIndex].at<=time+.01)applyCue(plan.cues[cueIndex++]);
+   if(fade)article.style.opacity=String(reduced?0:Math.max(0,1-(time-fade.at)/fade.duration));
+   lastElapsed=time;
+   if(time>=span&&(!syncAudio||syncAudio.ended)){playClosingVideo();return;}
+   frame=requestAnimationFrame(render);
+  }
+  if(syncAudio)for(const event of ['timeupdate','seeked','ended'])syncAudio.addEventListener(event,render);
+  render();
   return {
    element:overlay,
-   setSpeed(value){currentSpeed=Math.max(.25,value);},
-   showAll(){cancelled=true;clearTimeout(timer);disposeIntro();overlay.classList.remove('is-fading');overlay.classList.add('is-visible');fill();scroll.scrollTop=0;finish();},
-   destroy(){cancelled=true;clearTimeout(timer);disposeIntro();overlay.remove();}
+   setSpeed(value){virtualElapsed=elapsed();virtualChangedAt=performance.now();currentSpeed=Math.max(.25,value);},
+   showAll(){cancelled=true;clearTimeout(timer);cancelAnimationFrame(frame);detachAudio();disposeIntro();article.style.opacity='';overlay.classList.add('is-visible');fill();scroll.scrollTop=0;finish();},
+   destroy(){cancelled=true;clearTimeout(timer);cancelAnimationFrame(frame);detachAudio();disposeIntro();overlay.remove();}
   };
  };
 })();

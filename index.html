@@ -4651,16 +4651,17 @@ syncSMSUnreadBadge();
 </style>
 
 <link rel="stylesheet" href="assets/ending-letter.css">
-<script src="assets/ending-letter.js"></script>
+<script src="assets/ending-letter.js?v=20261108-music-sync"></script>
 <script>
 let endingVoiceFinished=false,endingNameFinished=false,endingLetterStarted=false;
 function maybeShowEndingLetter(){
- if(endingLetterStarted || !finalPigDelivered || !endingVoiceFinished || !endingNameFinished)return;
+ if(endingLetterStarted || !finalPigDelivered || nmAudioKind!=='endingName' || !Number.isFinite(nmSongAudio.duration) || nmSongAudio.duration<=0 || nmSongAudio.currentTime<nmSongAudio.duration/2)return;
  endingLetterStarted=true;
  closeVirtualKeyboard();
  document.querySelectorAll('.message-banner').forEach(banner=>banner.remove());
- createEndingLetter(phoneRoot,{onExit:()=>{wcHistoryJumpEnabled=true;wcInstallHistoryJump();}});
+ createEndingLetter(phoneRoot,{syncAudio:nmSongAudio,onExit:()=>{wcHistoryJumpEnabled=true;wcInstallHistoryJump();}});
 }
+for(const event of ['timeupdate','loadedmetadata','seeked'])nmSongAudio.addEventListener(event,maybeShowEndingLetter);
 nmSongAudio.addEventListener('ended',()=>{
  if(nmAudioKind!=='endingName')return;
  endingNameFinished=true;
