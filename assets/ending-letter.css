@@ -16,3 +16,9 @@
 
 .ending-letter.is-fading article{opacity:0;transition:opacity var(--ending-fade-duration,3s) ease-in-out}
 .ending-letter-copy header.ending-letter-next-title{margin-top:80px}
+
+.ending-intro{position:absolute;inset:0;display:grid;place-items:center;background:#000;z-index:2}
+.ending-intro video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.ending-intro-status{position:absolute;left:20px;right:20px;bottom:72px;text-align:center;font:13px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#aaa}
+.ending-intro-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:85%;white-space:nowrap;border:1px solid #ffffff40;border-radius:28px;background:#222e;color:#eee;padding:14px 24px;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;cursor:pointer}
+.ending-intro [hidden]{display:none!important}

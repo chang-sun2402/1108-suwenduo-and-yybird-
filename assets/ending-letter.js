@@ -1,4 +1,5 @@
 (()=>{
+ const endingIntroSource=new URL('ending-intro.mp4',document.currentScript.src).href;
  const paragraphs=[
  '我总觉得，人和人之间的相遇，是一件需要耗费许多运气的事。',
  '在那么漫长的时间里，在无数条本可以永不交汇的人生轨迹中，你们遇见了彼此。或许是许多未曾谋面的岁月，许多阴差阳错的瞬间，才终于换来了这一场相逢。光是想到这里，就已经觉得足够幸运，足够美好。',
@@ -23,8 +24,8 @@
    '生日快乐。'
   ],birthdayIndex:5}
  ];
- window.createEndingLetter=function(host,{speed=1,onComplete=()=>{},onExit=()=>{}}={}){
-  let cancelled=false,timer=null,complete=false,follow=true,currentSpeed=speed;
+ window.createEndingLetter=function(host,{speed=1,onComplete=()=>{},onExit=()=>{},videoSrc=endingIntroSource}={}){
+  let cancelled=false,timer=null,complete=false,follow=true,currentSpeed=speed,introVideo=null,introLayer=null;
   const overlay=document.createElement('section');
   overlay.className='ending-letter';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','suwenduo_与yybird来电');overlay.tabIndex=-1;
   overlay.innerHTML='<div class="ending-letter-scroll"><article><header></header><div class="ending-letter-copy"></div><span class="ending-letter-period" aria-hidden="true">·</span></article></div>';
@@ -47,9 +48,34 @@
     copy.append(...letter.paragraphs.map((text,i)=>paragraphNode(text,i,letter)));
    });
   };
+
+  const disposeIntro=()=>{
+   if(introVideo){introVideo.pause();introVideo.removeAttribute('src');introVideo.load();introVideo=null;}
+   introLayer?.remove();introLayer=null;
+  };
+  const playIntro=()=>new Promise(resolve=>{
+   overlay.dataset.stage='video';
+   introLayer=document.createElement('div');introLayer.className='ending-intro';
+   introVideo=document.createElement('video');
+   const video=introVideo;video.controls=true;video.playsInline=true;video.preload='auto';video.setAttribute('playsinline','');video.setAttribute('aria-label','生日结尾视频');
+   const status=document.createElement('p');status.className='ending-intro-status';status.setAttribute('role','status');status.textContent='视频加载中…';
+   const play=document.createElement('button');play.type='button';play.className='ending-intro-play';play.textContent='点击播放';play.hidden=true;
+   const attempt=()=>{if(cancelled)return;play.hidden=true;status.hidden=false;status.textContent='视频加载中…';video.play().then(()=>{if(!cancelled)status.hidden=true;}).catch(()=>{if(cancelled || !video.getAttribute('src'))return;status.hidden=true;play.hidden=false;play.textContent=video.error?'视频暂时无法播放，点击重试':'点击播放';});};
+   play.onclick=()=>{if(video.error)video.load();attempt();};
+   video.addEventListener('playing',()=>{status.hidden=true;play.hidden=true;});
+   video.addEventListener('pause',()=>{if(!cancelled && !video.ended && video.getAttribute('src')){play.textContent='继续播放';play.hidden=false;}});
+   video.addEventListener('error',()=>{if(cancelled || !video.getAttribute('src'))return;status.hidden=true;play.textContent='视频暂时无法播放，点击重试';play.hidden=false;});
+   video.addEventListener('ended',resolve,{once:true});
+   introLayer.append(video,status,play);overlay.append(introLayer);video.src=videoSrc;attempt();
+  });
   function finish(){if(complete)return;complete=true;overlay.dataset.stage='complete';overlay.classList.add('is-complete');onComplete();}
   (async()=>{
    await delay(reduced?0:1100);if(cancelled)return;
+   if(videoSrc){
+    await playIntro();if(cancelled)return;
+    disposeIntro();overlay.dataset.stage='video-black';
+    await delay(reduced?0:900);if(cancelled)return;
+   }
    for(let stage=0;stage<letters.length;stage++){
     const letter=letters[stage];overlay.dataset.stage=String(stage);overlay.classList.add('is-visible');title.textContent='';
     for(const character of letter.title){if(cancelled)return;title.textContent+=character;await delay(reduced?0:85);}
@@ -83,8 +109,8 @@
   return {
    element:overlay,
    setSpeed(value){currentSpeed=Math.max(.25,value);},
-   showAll(){cancelled=true;clearTimeout(timer);overlay.classList.remove('is-fading');overlay.classList.add('is-visible');fill();scroll.scrollTop=0;finish();},
-   destroy(){cancelled=true;clearTimeout(timer);overlay.remove();}
+   showAll(){cancelled=true;clearTimeout(timer);disposeIntro();overlay.classList.remove('is-fading');overlay.classList.add('is-visible');fill();scroll.scrollTop=0;finish();},
+   destroy(){cancelled=true;clearTimeout(timer);disposeIntro();overlay.remove();}
   };
  };
 })();
