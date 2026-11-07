@@ -2,6 +2,7 @@ import { get, put } from '@vercel/blob';
 
 const allowedOrigins = new Set([
   'https://chang-sun2402.github.io',
+  'https://suwenduo.github.io',
   'https://phone-1108-suwenduo777-1622.vercel.app',
   'https://phone-1108.vercel.app',
 ]);
