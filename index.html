@@ -3358,6 +3358,505 @@ renderChatMessages=function(contact){
 </script>
 
 <script>
+const wc77Messages=[
+ {
+  "speaker": "陈思罕",
+  "text": "左奇函",
+  "stamp": "3月5日 19:26"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你在哪"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "楼下"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "怎么了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "没事"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我来找你玩😝"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "来"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "顺便把我充电器带下来"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "原来我只是个送充电器的😐"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "对 还得包邮"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "77你回去了吗",
+  "stamp": "3月14日 21:08"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "还没 咋了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我爸买了吃的"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你来我们这边🥺"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "叔叔也在啊"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "嗯嗯 他说叫你一起"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "那我来"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你先别把我的吃了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "来晚了就不保证了😉"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左奇函！！！",
+  "stamp": "3月19日 00:00"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "生日快乐！！！🥳"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左少今天有什么安排"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "安排你给我唱生日歌"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "😳"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "祝福送到了 人先撤了"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "回来"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "我看见你房间灯还亮着了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "等我一下😑"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "哈哈哈哈哈"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "来吧 给你留蛋糕了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "zqh",
+  "stamp": "3月28日 22:36"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我明天那场还没背顺😭"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "哪段"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "就后面那一大段"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我一紧张就漏"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "拿过来 我给你搭一下"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你不睡吗🥺"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "这才几点"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "快点 别在手机上背给我了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "来了😭"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "杀青快乐左奇函🥳",
+  "stamp": "4月12日 20:17"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "杀青快乐！"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "刚刚喊你拍照怎么跑那么快"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我爸在叫我🥶"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你照片发我"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "等会儿挑一下"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "不许把我不好看的发出去😐"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "那没剩几张了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左奇函。"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "哈哈哈哈哈逗你的"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "77下课等我",
+  "stamp": "4月30日 18:42"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你又落什么了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "没有😑"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "就是等我一下"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "行 在门口"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "🥰"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "请我喝水"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "刚感动完"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "77你看一眼我刚刚那段",
+  "stamp": "7月12日 21:53"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你发"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "在你旁边😐"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "？"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "那你倒是抬头叫我啊"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你戴着耳机 我喊了😑"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左奇函",
+  "stamp": "8月12日 23:18"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "在"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "有点睡不着"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "紧张了？"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "嗯🥶"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "我也有点"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "真的假的"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "真的啊 我又不是上台就自动开机"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我以为你是🤨"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "明天跟着走一遍就好了"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "早点睡 到时候叫你"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "那你一定叫我🥺"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "知道了 手机放下"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "终于结束了🤯",
+  "stamp": "8月17日 23:09"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "辛苦了陈思罕同学"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "你也是 左奇函同学🤝"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "香港那个还作数吗"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "当然"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你别到时候又睡不醒"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "这次一定醒🤓"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "下来没",
+  "stamp": "8月20日 11:32"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "电梯中"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "我在门口"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左少今天带路😎"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "行 走丢了别哭"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "🥺"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "zqh你在哪",
+  "stamp": "8月20日 15:41"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "刚刚那个店门口"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "我怎么看不见你"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你往回走"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "看见没 我挥手呢"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "看见了😵‍💫"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "不是说跟紧一点吗"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "闻香水去了😶"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "行 闻完记得把人领走"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "今天拍我的照片发我🥺",
+  "stamp": "8月20日 20:36"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "你不是就在我旁边"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "怕你忘了"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "隔空传给你了"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "左少摄影技术可以啊🤓"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "那必须的"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "除了这张把我拍得一米二的"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "那是你自己的问题"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "😑"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "上学怎么样",
+  "stamp": "9月6日 21:27"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "作业中😵‍💫"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "想回去找你们玩了"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "这才开学几天"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "已经感觉很久了🥲"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "写完叫我 打一把"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "真的？"
+ },
+ {
+  "speaker": "⬅️77",
+  "text": "真的 先写完"
+ },
+ {
+  "speaker": "陈思罕",
+  "text": "好 等我😝"
+ }
+];
+const wc77Contact=wcContacts.find(contact=>contact.name==='⬅️77');
+const wcBefore77Render=renderChatMessages;
+renderChatMessages=function(contact){
+ if(contact!==wc77Contact)return wcBefore77Render(contact);
+ const body=$('wechat').querySelector('.wc-chatbody');
+ body.innerHTML=wc77Messages.map(message=>{
+  const stamp=message.stamp?'<div class="wc-group-stamp">'+escapeChat(message.stamp)+'</div>':'';
+  const bubble='<div class="wc-bubble">'+escapeChat(message.text)+'</div>';
+  if(message.speaker==='陈思罕')return stamp+'<div class="wc-message wc-group-message outgoing">'+bubble+wcSelfAvatar()+'</div>';
+  return stamp+'<div class="wc-message wc-group-message">'+wcAvatar(contact)+bubble+'</div>';
+ }).join('');
+ body.scrollTop=body.scrollHeight;
+};
+</script>
+
+<script>
 const wcHistorySources = new Map([
  [wcHainanGroup, wcHainanMessages],
  [wcCrewGroup, [...wcCrewSchedule, ...wcWrapMessages]],
@@ -3366,7 +3865,8 @@ const wcHistorySources = new Map([
  [wcHenryContact, wcHenryMessages],
  [wcLuluContact, wcLuluMessages],
  [wcLonggeContact, wcLonggeMessages],
- [wcJonathanContact, wcJonathanMessages]
+ [wcJonathanContact, wcJonathanMessages],
+ [wc77Contact, wc77Messages]
 ]);
 
 const wcChatActivity=new Map();
