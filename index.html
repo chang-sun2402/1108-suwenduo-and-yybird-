@@ -1107,7 +1107,7 @@ const smsThreads=[
 const smsAvatar='<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="18" r="9" fill="white"/><path d="M7 43v-4c0-12 34-12 34 0v4Q24 53 7 43" fill="white"/></svg>';
 const smsScreen=document.createElement('section');smsScreen.id='simSMS';smsScreen.className='screen hidden sim-sms';document.querySelector('.phone').append(smsScreen);screens.push('simSMS');let smsFilterUnread=false;
 function openSMS(query=''){show('simSMS');smsScreen.innerHTML='<div class="sms-top"><button id="smsEdit">编辑</button><button id="smsFilter" aria-label="筛选未读信息">☰</button></div><h1>信息</h1><div class="sms-list">'+smsThreads.map((m,i)=>({m,i})).filter(({m})=>(!smsFilterUnread||!m.read)&&(!query||(m.number+m.text).includes(query))).map(({m,i})=>'<button class="sms-row" data-sms="'+i+'"><span class="sms-unread '+(m.read?'read':'')+'"></span><span class="sms-avatar">'+smsAvatar+'</span><span class="sms-copy"><span class="sms-line"><strong>'+m.number+'</strong><time>'+m.time+'</time><i>›</i></span><span class="sms-preview"><small>主号</small> '+m.text.replace(/\n/g,' ')+'</span></span></button>').join('')+'</div><div class="sms-search"><span>⌕</span><input aria-label="搜索信息" placeholder="搜索" value=""><span>♩</span></div>';$('smsFilter').classList.toggle('active',smsFilterUnread);$('smsFilter').onclick=()=>{smsFilterUnread=!smsFilterUnread;openSMS();};$('smsEdit').onclick=()=>{smsThreads.forEach(m=>m.read=true);openSMS();};const input=smsScreen.querySelector('input');input.value=query;input.oninput=()=>{const value=input.value;smsScreen.querySelectorAll('.sms-row').forEach(b=>{const m=smsThreads[Number(b.dataset.sms)];b.style.display=(m.number+m.text).includes(value)?'':'none';});};smsScreen.querySelectorAll('[data-sms]').forEach(b=>b.onclick=()=>openSMSThread(Number(b.dataset.sms)));}
-function openSMSThread(i){const m=smsThreads[i];m.read=true;smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+m.number+' ›</strong></div><span></span></header><div class="sms-conversation"><p class="sms-date">'+m.time+'</p><div class="sms-bubble">'+m.text.replace(/\n/g,'<br>')+'</div><p class="sms-fiction">虚构短信 · 展示用号码</p></div><div class="sms-compose"><span>＋</span><div>短信</div><span>♩</span></div>';$('smsBack').onclick=()=>openSMS();}
+function openSMSThread(i){const m=smsThreads[i];m.read=true;smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+m.number+' ›</strong></div><span></span></header><div class="sms-conversation"><p class="sms-date">'+m.time+'</p><div class="sms-bubble">'+m.text.replace(/\n/g,'<br>')+'</div></div><div class="sms-compose"><span>＋</span><div>短信</div><span class="sms-wave" aria-hidden="true">▂▆█▆▂</span></div>';$('smsBack').onclick=()=>openSMS();}
 const beforeSMSApp=openApp;openApp=function(name){if(name==='信息')return openSMS();return beforeSMSApp(name);};
 
 
@@ -2493,7 +2493,7 @@ const nmBeforeStoryPreview=openNetease;
 openNetease=function(page=nmCurrent){nmBeforeStoryPreview(page);if(page==='messages'){const row=$('content').querySelector('.nm-xixi-row');if(row){row.querySelector('small').textContent='[歌曲] 雁南飞：我们的岛在哪';row.querySelector('time').textContent='9月27日';}}};
 </script><script>
 function closeVirtualKeyboard(){const keyboard=$('virtualKeyboard');if(!keyboard)return;keyboard.remove();$('scriptInput')?.classList.remove('editing');$('ownerSMSInput')?.classList.remove('editing');}
-function dismissKeyboardOutside(event){if(!$('virtualKeyboard'))return;const target=event.target;if(target instanceof Element&&target.closest('#virtualKeyboard, #scriptInput, #ownerSMSInput'))return;closeVirtualKeyboard();}
+function dismissKeyboardOutside(event){if(!$('virtualKeyboard'))return;const target=event.target;if(target instanceof Element&&target.closest('#virtualKeyboard, #scriptInput, #ownerSMSInput, #ownerSMSSend'))return;closeVirtualKeyboard();}
 document.addEventListener('pointerdown',dismissKeyboardOutside,true);
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeVirtualKeyboard();});
 </script><script>
@@ -3541,7 +3541,7 @@ document.addEventListener('visibilitychange',tickStoryClock);
 #ownerSMSNotification .banner-copy{min-width:0}
 #ownerSMSNotification .banner-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ownerSMSInput{flex:1;min-width:0;text-align:left;border:1px solid #ccc;border-radius:18px;padding:7px 12px;min-height:35px;background:transparent;white-space:pre-wrap}
-#ownerSMSInput:empty:before{content:'短信';color:#999}
+#ownerSMSInput:empty:before{content:'信息 · 短信';color:#a5a5aa}
 #ownerSMSSend{background:#34c759;color:#fff;border-radius:50%;width:29px;height:29px;flex-shrink:0}
 #ownerSMSSend:disabled{opacity:.35}
 #ownerSMSConversation{display:flex;flex-direction:column;gap:12px;min-height:0}
@@ -3549,5 +3549,53 @@ document.addEventListener('visibilitychange',tickStoryClock);
 #ownerSMSConversation .owner-sms-outgoing{align-self:flex-end;background:#34c759;color:white}
 #ownerSMSConversation .owner-sms-outgoing:before{left:auto;right:-5px;background:#34c759;border-bottom-right-radius:0;border-bottom-left-radius:12px}
 #ownerSMSConversation .sms-date{align-self:center;margin:6px 0}
+</style>
+
+<style>
+/* Light Messages surfaces and floating contact controls. */
+.sim-sms{background:#fff;color:#17171a}
+.phone:has(.sim-sms:not(.hidden)) .status{color:#111}
+.phone:has(.sim-sms:not(.hidden)) .homebar:after{background:#111}
+.sms-top button{color:#222;background:#f5f5f7;border:1px solid #e7e7eb;box-shadow:inset 0 1px 0 #fff}
+.sms-row{color:#17171a}
+.sms-row:after{background:#e7e7eb}
+.sms-avatar{background:linear-gradient(150deg,#acc7e7,#8283b9)}
+.sms-preview{color:#85858c}
+.sms-preview small{background:#e4e4e9;color:#68686d}
+.sms-line time,.sms-line i{color:#98989e}
+.sms-search{background:#f3f3f5;border-color:#e4e4e8;color:#8e8e93}
+.sms-search input{color:#17171a}
+.sms-thread-head{position:absolute;top:55px;left:0;right:0;height:106px;z-index:2;justify-content:space-between;align-items:flex-start;padding:0 17px;border:0;background:linear-gradient(#ffffffed,#ffffff78 75%,#ffffff00)}
+.sms-thread-head>button{position:absolute;left:16px;top:9px;width:45px;height:40px;text-align:center;color:#111;background:#ffffffa8;border:1px solid #d9d9df;border-radius:24px;font-size:34px;line-height:32px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 1px 1px #fff,0 2px 6px #00000007}
+.sms-thread-head>div{width:100%;gap:5px;pointer-events:none}
+.sms-thread-head>.sms-avatar,.sms-thread-head .sms-avatar{width:51px;height:51px;box-shadow:0 1px 2px #00000006}
+.sms-thread-head .sms-avatar svg{width:48px;height:48px}
+.sms-thread-head strong{display:block;max-width:calc(100% - 42px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 14px;border:1px solid #dddddf;border-radius:22px;background:#ffffffba;font-size:12px;font-weight:600;line-height:19px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 1px 1px #fff,0 2px 5px #00000004}
+.sms-thread-head>span{display:none}
+.sms-conversation{padding:116px 18px 22px;scroll-padding-bottom:20px}
+.sms-date{font-size:11px;color:#8e8e93;letter-spacing:.1px}
+.sms-bubble{background:#e9e9eb;color:#111;max-width:82%;padding:9px 13px;border-radius:21px;font-size:15.5px;line-height:1.5;letter-spacing:.05px}
+.sms-bubble:before{background:#e9e9eb;left:-4px;width:12px;height:13px}
+.sms-compose{padding:10px 16px 9px;gap:10px;background:#ffffffeb;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.sms-compose>span:first-child{display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;border:1px solid #dddde2;border-radius:50%;background:linear-gradient(#fff,#f9f9fb);color:#151515;font-size:29px;line-height:1;box-shadow:inset 0 1px 0 #fff,0 2px 5px #00000003}
+.sms-compose>div,#ownerSMSInput{background:linear-gradient(#fafafa,#fff);border:1px solid #d6d6dc;border-radius:24px;box-shadow:inset 0 1px 2px #00000004;padding:8px 13px;font-size:15px;line-height:22px;min-height:40px;color:#17171a}
+.sms-compose .sms-wave{font-size:13px;letter-spacing:1px;color:#aeb0b7}
+#ownerSMSInput.editing{border-color:#b5b5bd}
+#ownerSMSSend{width:30px;height:30px;font-size:21px;line-height:28px;background:#32c75a;box-shadow:0 1px 2px #00000008}
+#ownerSMSSend:disabled{background:#e4e4e8;color:#a2a2a8;opacity:1;box-shadow:none}
+#ownerSMSConversation{gap:8px}
+#ownerSMSConversation .owner-sms-outgoing{background:#32c75a}
+#ownerSMSConversation .owner-sms-outgoing:before{background:#32c75a}
+#ownerSMSConversation .sms-date{margin:8px 0 13px}
+.sim-sms:has(#virtualKeyboard){padding-bottom:0}
+.sim-sms #virtualKeyboard{padding-bottom:17px}
+.sim-sms .virtual-keyboard{background:#e1e3e8}
+.sim-sms .virtual-key{background:#fff;color:#111;box-shadow:0 1px 0 #aaaeb6}
+.sim-sms .virtual-key.utility,.sim-sms .virtual-key.number-toggle{background:#c4c8d0}
+.sim-sms .virtual-key.return{background:#34c759;color:#fff}
+.sim-sms .keyboard-foot{color:#17171a}
+.sim-sms .keyboard-foot button{color:inherit}
+.sms-bubble:before{clip-path:polygon(0 100%,80% 0,100% 100%)}
+#ownerSMSConversation .owner-sms-outgoing:before{clip-path:polygon(0 0,100% 100%,0 100%)}
 </style>
 </body></html>
