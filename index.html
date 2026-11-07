@@ -3261,7 +3261,8 @@ const wcJonathanMessages=[
  },
  {
   "speaker": "陈思罕",
-  "text": "（表情包）"
+  "text": "合十表情包",
+  "image": "assets/jonathan-chat-sticker-1.jpg"
  },
  {
   "speaker": "陈思罕",
@@ -3329,7 +3330,9 @@ renderChatMessages=function(contact){
  const body=$('wechat').querySelector('.wc-chatbody');
  body.innerHTML=wcJonathanMessages.map(message=>{
   const stamp=message.stamp?'<div class="wc-group-stamp">'+escapeChat(message.stamp)+'</div>':'';
-  const bubble='<div class="wc-bubble">'+escapeChat(message.text)+'</div>';
+  const bubble=message.image
+   ? '<img class="wc-chat-sticker" src="'+escapeChat(message.image)+'" alt="'+escapeChat(message.text)+'">'
+   : '<div class="wc-bubble">'+escapeChat(message.text)+'</div>';
   if(message.speaker==='陈思罕')return stamp+'<div class="wc-message wc-group-message outgoing">'+bubble+wcSelfAvatar()+'</div>';
   return stamp+'<div class="wc-message wc-group-message">'+wcAvatar(contact)+bubble+'</div>';
  }).join('');
