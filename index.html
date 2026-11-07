@@ -1110,8 +1110,8 @@ const smsThreads=[
 {number:'1065 XXXX 1108',time:'星期一',read:true,text:'【会员通知】您有一张满30减5优惠券即将到期，记得及时使用。具体使用范围以应用内显示为准。退订请回复T。'}];
 const smsAvatar='<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="18" r="9" fill="white"/><path d="M7 43v-4c0-12 34-12 34 0v4Q24 53 7 43" fill="white"/></svg>';
 const smsScreen=document.createElement('section');smsScreen.id='simSMS';smsScreen.className='screen hidden sim-sms';document.querySelector('.phone').append(smsScreen);screens.push('simSMS');let smsFilterUnread=false;
-function openSMS(query=''){show('simSMS');smsScreen.innerHTML='<div class="sms-top"><button id="smsEdit">编辑</button><button id="smsFilter" aria-label="筛选未读信息">☰</button></div><h1>信息</h1><div class="sms-list">'+smsThreads.map((m,i)=>({m,i})).filter(({m})=>(!smsFilterUnread||!m.read)&&(!query||(m.number+m.text).includes(query))).map(({m,i})=>'<button class="sms-row" data-sms="'+i+'"><span class="sms-unread '+(m.read?'read':'')+'"></span><span class="sms-avatar">'+smsAvatar+'</span><span class="sms-copy"><span class="sms-line"><strong>'+m.number+'</strong><time>'+m.time+'</time><i>›</i></span><span class="sms-preview"><small>主号</small> '+m.text.replace(/\n/g,' ')+'</span></span></button>').join('')+'</div><div class="sms-search"><span>⌕</span><input aria-label="搜索信息" placeholder="搜索" value=""><span>♩</span></div>';$('smsFilter').classList.toggle('active',smsFilterUnread);$('smsFilter').onclick=()=>{smsFilterUnread=!smsFilterUnread;openSMS();};$('smsEdit').onclick=()=>{smsThreads.forEach(m=>m.read=true);openSMS();};const input=smsScreen.querySelector('input');input.value=query;input.oninput=()=>{const value=input.value;smsScreen.querySelectorAll('.sms-row').forEach(b=>{const m=smsThreads[Number(b.dataset.sms)];b.style.display=(m.number+m.text).includes(value)?'':'none';});};smsScreen.querySelectorAll('[data-sms]').forEach(b=>b.onclick=()=>openSMSThread(Number(b.dataset.sms)));}
-function openSMSThread(i){const m=smsThreads[i];m.read=true;smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+m.number+' ›</strong></div><span></span></header><div class="sms-conversation"><p class="sms-date">'+m.time+'</p><div class="sms-bubble">'+m.text.replace(/\n/g,'<br>')+'</div></div><div class="sms-compose"><span>＋</span><div>短信</div><span class="sms-wave" aria-hidden="true">▂▆█▆▂</span></div>';$('smsBack').onclick=()=>openSMS();}
+function openSMS(query=''){syncSMSUnreadBadge();show('simSMS');smsScreen.innerHTML='<div class="sms-top"><button id="smsEdit">编辑</button><button id="smsFilter" aria-label="筛选未读信息">☰</button></div><h1>信息</h1><div class="sms-list">'+smsThreads.map((m,i)=>({m,i})).filter(({m})=>(!smsFilterUnread||!m.read)&&(!query||(m.number+m.text).includes(query))).map(({m,i})=>'<button class="sms-row" data-sms="'+i+'"><span class="sms-unread '+(m.read?'read':'')+'"></span><span class="sms-avatar">'+smsAvatar+'</span><span class="sms-copy"><span class="sms-line"><strong>'+m.number+'</strong><time>'+m.time+'</time><i>›</i></span><span class="sms-preview"><small>主号</small> '+m.text.replace(/\n/g,' ')+'</span></span></button>').join('')+'</div><div class="sms-search"><span>⌕</span><input aria-label="搜索信息" placeholder="搜索" value=""><span>♩</span></div>';$('smsFilter').classList.toggle('active',smsFilterUnread);$('smsFilter').onclick=()=>{smsFilterUnread=!smsFilterUnread;openSMS();};$('smsEdit').onclick=()=>{smsThreads.forEach(m=>m.read=true);openSMS();};const input=smsScreen.querySelector('input');input.value=query;input.oninput=()=>{const value=input.value;smsScreen.querySelectorAll('.sms-row').forEach(b=>{const m=smsThreads[Number(b.dataset.sms)];b.style.display=(m.number+m.text).includes(value)?'':'none';});};smsScreen.querySelectorAll('[data-sms]').forEach(b=>b.onclick=()=>openSMSThread(Number(b.dataset.sms)));}
+function openSMSThread(i){const m=smsThreads[i];m.read=true;syncSMSUnreadBadge();smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+m.number+' ›</strong></div><span></span></header><div class="sms-conversation"><p class="sms-date">'+m.time+'</p><div class="sms-bubble">'+m.text.replace(/\n/g,'<br>')+'</div></div><div class="sms-compose"><span>＋</span><div>短信</div><span class="sms-wave" aria-hidden="true">▂▆█▆▂</span></div>';$('smsBack').onclick=()=>openSMS();}
 const beforeSMSApp=openApp;openApp=function(name){if(name==='信息')return openSMS();return beforeSMSApp(name);};
 
 
@@ -3450,6 +3450,7 @@ function deliverOwnerSMS(){
  ownerSMSCount=1;
  setStoryClockStage('smsArrived');
  smsThreads.unshift(ownerSMSThread);
+ syncSMSUnreadBadge();
  if(!smsScreen.classList.contains('hidden') && !smsScreen.querySelector('.sms-thread-head'))openSMS();
  const banner=document.createElement('button');
  banner.className='message-banner';
@@ -3466,6 +3467,7 @@ openSMSThread=function(index){
  if(smsThreads[index]!==ownerSMSThread)return openBeforeOwnerSMSThread(index);
  closeGoosePlayer();
  ownerSMSThread.read=true;
+ syncSMSUnreadBadge();
  $('ownerSMSNotification')?.remove();
  smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+ownerSMSNumber+' ›</strong></div><span></span></header><div class="sms-conversation" id="ownerSMSConversation"></div><div class="sms-compose"><span aria-hidden="true">＋</span><button class="owner-sms-input" id="ownerSMSInput" aria-label="短信输入框，打开虚拟键盘"></button><button id="ownerSMSSend" aria-label="发送短信">↑</button></div>';
  $('smsBack').onclick=()=>{closeVirtualKeyboard();openSMS();};
@@ -3550,7 +3552,7 @@ async function sendOwnerSMSReply(){
  while(ownerSMSMessages[ownerSMSCount] && !ownerSMSMessages[ownerSMSCount].outgoing){
   await chatDelay(1500);
   ownerSMSThread.text=ownerSMSMessages[ownerSMSCount].text;
-  if(!isOwnerSMSOpen())ownerSMSThread.read=false;
+  if(!isOwnerSMSOpen()){ownerSMSThread.read=false;syncSMSUnreadBadge();}
   ownerSMSCount++;
   renderOwnerSMS();
  }
@@ -3945,7 +3947,7 @@ async function startAfterBirthdayStory(){
  ownerSMSThread.text=ownerBirthdayThanks;
  ownerSMSThread.time='00:03';
  if(isOwnerSMSOpen())renderOwnerSMS();
- else ownerSMSThread.read=false;
+ else{ownerSMSThread.read=false;syncSMSUnreadBadge();}
  await chatDelay(1000);
  deliverFinalSongShare();
 }
@@ -4078,5 +4080,27 @@ function paintEndingVoice(playing){
 .wc-voice-bubble.is-playing>span:first-child{animation:voicePulse .7s ease-in-out infinite alternate}
 @keyframes voicePulse{from{opacity:.35}to{opacity:1}}
 #finalSongNotification .banner-icon{color:white;font-size:28px}
+</style>
+
+<script>
+function syncSMSUnreadBadge(){
+ const icon=document.querySelector('#apps .app[aria-label="信息"] .icon');
+ if(!icon)return;
+ const unread=smsThreads.filter(thread=>!thread.read).length;
+ let badge=icon.querySelector('.sms-app-unread');
+ if(!unread){badge?.remove();return;}
+ if(!badge){
+  badge=document.createElement('span');
+  badge.className='sms-app-unread';
+  icon.append(badge);
+ }
+ badge.textContent=unread>99?'99+':String(unread);
+ badge.setAttribute('aria-label',unread+' 条未读短信');
+}
+syncSMSUnreadBadge();
+</script>
+<style>
+#apps .app[aria-label="信息"] .icon{overflow:visible}
+.sms-app-unread{position:absolute;top:-6px;right:-7px;z-index:4;display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#ff3b30;color:#fff;font-size:12px;font-weight:500;line-height:1;text-shadow:none;box-shadow:0 1px 3px #0002}
 </style>
 </body></html>
