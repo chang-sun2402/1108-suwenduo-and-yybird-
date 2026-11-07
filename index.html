@@ -2912,7 +2912,7 @@ function deliverEmergencySongNotification(){
  const banner=document.createElement('button');banner.id='nmEmergencyNotification';banner.className='message-banner nm-emergency-banner';banner.setAttribute('aria-label','网易云音乐，等待复活码分享歌曲紧急联络人，'+nmEmergencyCaption+'，点击查看');
  banner.innerHTML='<span class="banner-icon" aria-hidden="true"><img src="'+track.cover+'" alt=""></span><span class="banner-copy"><span class="banner-top"><strong>等待复活码 · 网易云音乐</strong><small>现在</small></span><span class="banner-text">'+escapeChat('[歌曲] 紧急联络人：'+nmEmergencyCaption)+'</span></span>';
  banner.onclick=()=>{setStoryClockStage('musicOpened');closeVirtualKeyboard();banner.remove();openNetease('xixi');};phoneRoot.append(banner);playMessageSound();
- setTimeout(()=>banner.remove(),8000);
+ setTimeout(()=>banner.remove(),11000);
 }
 const nmBeforeEmergencyPreview=openNetease;
 openNetease=function(page=nmCurrent){nmBeforeEmergencyPreview(page);if(!nmEmergencyDelivered)return;if(page==='xixi'){nmEmergencyRead=true;$('nmEmergencyNotification')?.remove();}if(page==='messages'){const row=$('content').querySelector('.nm-xixi-row');if(row){row.querySelector('small').textContent='[歌曲] 紧急联络人：'+nmEmergencyCaption;row.querySelector('time').textContent='刚刚';row.querySelector('.nm-emergency-dot')?.remove();if(!nmEmergencyRead){const dot=document.createElement('span');dot.className='nm-emergency-dot';dot.setAttribute('aria-label','未读消息');row.append(dot);}}}};
@@ -3951,7 +3951,7 @@ function deliverFinalSongShare(){
  banner.onclick=()=>{closeVirtualKeyboard();closeGoosePlayer();banner.remove();openNetease('xixi');};
  phoneRoot.append(banner);
  playMessageSound();
- setTimeout(()=>banner.remove(),8000);
+ setTimeout(()=>banner.remove(),11000);
 }
 const nmBeforeFinalShare=openNetease;
 openNetease=function(page=nmCurrent){
