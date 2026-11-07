@@ -13,3 +13,6 @@
 @keyframes endingLetterCursor{50%{opacity:0}}
 @media(max-width:360px){.ending-letter article{padding-inline:24px}.ending-letter-copy p{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.ending-letter,.ending-letter-copy .is-typing:after{animation:none;opacity:1}.ending-letter article{transition:none}}
+
+.ending-letter.is-fading article{opacity:0;transition:opacity var(--ending-fade-duration,3s) ease-in-out}
+.ending-letter-copy header.ending-letter-next-title{margin-top:80px}
