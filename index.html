@@ -489,6 +489,7 @@ function renderChatMessages(c){
 }
 function refreshPigChat(){if(activeChat==='🐷')renderChatMessages(wcContacts.find(c=>c.name==='🐷'));else wcRefreshList();}
 function syncScriptInput(){
+ if(isOwnerSMSOpen()){syncOwnerSMSInput();return;}
  const input=$('scriptInput');if(!input||activeChat!=='🐷')return;
  input.textContent=scriptedReply.draft;
  input.classList.toggle('auto-typing',scriptedReply.typing);
@@ -509,6 +510,7 @@ function animateTypingKey(){
  const key=keys[Math.floor(Math.random()*keys.length)];key.classList.add('pressed');setTimeout(()=>key.classList.remove('pressed'),95);
 }
 function beginScriptTyping(){
+ if(isOwnerSMSOpen()){beginOwnerSMSTyping();return;}
  if(activeChat!=='🐷'||!scriptedReply.ready||scriptedReply.typing||scriptedReply.sent||scriptedReply.draft||!scriptedReply.text)return;
  scriptedReply.typing=true;let i=0;
  const typeNext=()=>{scriptedReply.draft=scriptedReply.text.slice(0,++i);animateTypingKey();if(i===scriptedReply.text.length){scriptedReply.typing=false;typingTimer=null;}else typingTimer=setTimeout(typeNext,90+Math.random()*60);syncScriptInput();};
@@ -540,6 +542,7 @@ async function advancePigConversation(index){
  }
 }
 function sendScriptReply(){
+ if(isOwnerSMSOpen()){sendOwnerSMSReply();return;}
  if(activeChat!=='🐷'||!scriptedReply.ready||scriptedReply.typing||scriptedReply.sent||!scriptedReply.text||scriptedReply.draft!==scriptedReply.text)return;
  const index=scriptedReply.index;
  pigConversation.push({text:scriptedReply.text,outgoing:true});scriptedReply.sent=true;scriptedReply.ready=false;scriptedReply.draft='';refreshPigChat();syncScriptInput();
@@ -552,7 +555,7 @@ function openVirtualKeyboard(){
  keyboard.innerHTML='<div class="keyboard-suggestions" aria-hidden="true"></div>';
  const rows=[['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['⇧','Z','X','C','V','B','N','M','⌫'],['123','☺','空格','回车']];
  rows.forEach(keys=>{const row=document.createElement('div');row.className='keyboard-row';keys.forEach(label=>{const key=document.createElement('button');key.type='button';key.className='virtual-key'+(label==='回车'?' return':label==='空格'?' space':label.length>1||['⇧','⌫','🌐'].includes(label)?' utility':'');key.textContent=/^[A-Z]$/.test(label)?label.toLowerCase():label==='空格'?'':label;const keyPaths={'⇧':'<path d="M3 12 12 3l9 9h-6v9H9v-9z"/>','⌫':'<path d="M9 5h12v14H9l-7-7z"/><path d="m12 9 6 6m0-6-6 6"/>','回车':'<path d="M12 22V3m-8 8 8-8 8 8"/>'};if(keyPaths[label])key.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+keyPaths[label]+'</svg>';key.setAttribute('aria-label',label==='回车'?'回车发送':label);if(label==='123')key.classList.add('number-toggle');if(/^[A-Z]$/.test(label))key.dataset.key=label.toLowerCase();if(label==='回车')key.id='keyboardReturn';key.onclick=()=>{key.classList.add('pressed');setTimeout(()=>key.classList.remove('pressed'),130);if(label==='回车')sendScriptReply();else if(/^[A-Z]$/.test(label)||label==='空格')beginScriptTyping();};row.append(key);});keyboard.append(row);});
- const foot=document.createElement('div');foot.className='keyboard-foot';foot.innerHTML='<button class="keyboard-hide" aria-label="收起键盘"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="13"/><ellipse cx="16" cy="16" rx="6" ry="13"/><path d="M3 16h26M6 8h20M6 24h20"/></svg><span>⌄</span></button><span aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="11" y="2" width="10" height="20" rx="5"/><path d="M7 15v3a9 9 0 0 0 18 0v-3M16 27v4m-6 0h12"/></svg></span>';foot.querySelector('button').onclick=closeVirtualKeyboard;keyboard.append(foot);$('wechat').append(keyboard);$('scriptInput').classList.add('editing');syncScriptInput();
+ const foot=document.createElement('div');foot.className='keyboard-foot';foot.innerHTML='<button class="keyboard-hide" aria-label="收起键盘"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="16" cy="16" r="13"/><ellipse cx="16" cy="16" rx="6" ry="13"/><path d="M3 16h26M6 8h20M6 24h20"/></svg><span>⌄</span></button><span aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="11" y="2" width="10" height="20" rx="5"/><path d="M7 15v3a9 9 0 0 0 18 0v-3M16 27v4m-6 0h12"/></svg></span>';foot.querySelector('button').onclick=closeVirtualKeyboard;keyboard.append(foot);(isOwnerSMSOpen()?smsScreen:$('wechat')).append(keyboard);(isOwnerSMSOpen()?$('ownerSMSInput'):$('scriptInput')).classList.add('editing');syncScriptInput();
 }
 function wcOpenChat(c){
  show('wechat');activeChat=c.name;if(c.name==='🐷'){pigMessageRead=true;$('pigNotification')?.remove();}
@@ -634,7 +637,7 @@ function iosArtwork(name){
  if(name==='信息')return wrap(bubble,'url(#green)');
  if(name==='电话')return wrap('<path d="M17 11c-5 0-7 6-5 12 5 13 13 22 25 26 6 2 12-1 12-6 0-2-8-8-10-8-2 0-4 5-6 4-6-3-9-6-12-12-1-2 4-4 4-6 0-2-5-10-8-10" fill="white"/>','url(#green)');
  if(name==='微信')return wrap('<path d="M35 16c-12-8-29-1-29 10 0 5 3 9 7 12l-2 6 7-4 5 1c-3-12 4-20 12-20" fill="white"/><path d="M53 34c0-8-7-13-15-13s-15 5-15 13 7 13 15 13l5-1 6 3-1-6c3-2 5-5 5-9" fill="white"/><g fill="#16bd45"><circle cx="17" cy="24" r="2"/><circle cx="29" cy="24" r="2"/><circle cx="33" cy="32" r="1.7"/><circle cx="44" cy="32" r="1.7"/></g>','url(#green)');
- if(name==='日历')return wrap('<text x="30" y="17" text-anchor="middle" fill="#ff3b30" font-size="10" font-family="sans-serif">星期六</text><text x="30" y="49" text-anchor="middle" fill="#111" font-size="35" font-weight="300" font-family="sans-serif">8</text>');
+ if(name==='日历')return wrap('<text x="30" y="17" text-anchor="middle" fill="#ff3b30" font-size="10" font-family="sans-serif" data-story-calendar-weekday>星期六</text><text x="30" y="49" text-anchor="middle" fill="#111" font-size="35" font-weight="300" font-family="sans-serif">8</text>');
  if(name==='照片')return wrap(Array.from({length:8},(_,i)=>'<ellipse cx="30" cy="19" rx="8" ry="12" fill="'+['#ffb22c','#ffe438','#78cc4c','#34c8b6','#48a8ee','#7978d7','#dc7dbd','#ff746b'][i]+'" fill-opacity=".82" transform="rotate('+i*45+' 30 30)"/>').join(''));
  if(name==='相机')return wrap('<path d="M8 21h12l4-6h13l4 6h11v27H8z" fill="#37383c"/><circle cx="30" cy="34" r="12" fill="#adb0b5"/><circle cx="30" cy="34" r="9" fill="#22252a"/><circle cx="30" cy="34" r="5" fill="#344854"/><circle cx="45" cy="25" r="2" fill="#e6cf69"/>','#c7c9ce');
  if(name==='天气')return wrap('<circle cx="23" cy="23" r="12" fill="#ffd23c"/><path d="M17 44a8 8 0 0 1-1-16 12 12 0 0 1 22-3 10 10 0 1 1 7 19z" fill="#fff" fill-opacity=".96"/>','url(#sky)');
@@ -1072,7 +1075,7 @@ const beforeWeatherApp=openApp;openApp=function(name){if(name==='天气')return 
 const calendarScreen=document.createElement('section');calendarScreen.id='simCalendar';calendarScreen.className='screen hidden sim-calendar';document.querySelector('.phone').append(calendarScreen);screens.push('simCalendar');let calendarYear=2026,calendarMonth=10,calendarSelected=7;
 function openCalendar(){show('simCalendar');renderCalendar();}
 function renderCalendar(){const count=new Date(calendarYear,calendarMonth+1,0).getDate(),offset=new Date(calendarYear,calendarMonth,1).getDay();const marker=d=>calendarMonth===4&&d===17?'❤️':calendarMonth===10&&d===8?'🥳🎂🎊':'';calendarScreen.innerHTML='<header class="cal-toolbar"><button id="calPrev" aria-label="上个月">‹</button><span>'+calendarYear+'年</span><button id="calNext" aria-label="下个月">›</button><div></div><button id="calSearch" aria-label="查找纪念日期">⌕</button></header><div class="cal-scroll"><h1>'+ (calendarMonth+1)+'月</h1><div class="cal-weekdays">'+['日','一','二','三','四','五','六'].map(d=>'<span>'+d+'</span>').join('')+'</div><div class="cal-grid">'+Array.from({length:offset},()=>'<span class="cal-blank"></span>').join('')+Array.from({length:count},(_,i)=>{const d=i+1;return '<button data-day="'+d+'" class="'+(d===calendarSelected?'chosen ':'')+(calendarYear===2026&&calendarMonth===10&&d===8?'cal-today':'')+'" aria-label="'+(calendarMonth+1)+'月'+d+'日 '+marker(d)+'"><span>'+d+'</span><small>'+marker(d)+'</small></button>';}).join('')+'</div><section class="cal-agenda"><p>'+calendarYear+'年'+(calendarMonth+1)+'月'+calendarSelected+'日</p>'+(marker(calendarSelected)?'<div class="cal-event"><i></i><span>全天</span><strong>'+marker(calendarSelected)+'</strong></div>':'<div class="cal-no-events">无日程</div>')+'</section></div><footer class="cal-footer"><button id="calToday">今天</button><button id="calDates">日历</button><button id="calInbox">收件箱</button></footer>';
-$('calPrev').onclick=()=>changeCalendarMonth(-1);$('calNext').onclick=()=>changeCalendarMonth(1);$('calToday').onclick=()=>{calendarYear=2026;calendarMonth=10;calendarSelected=7;renderCalendar();};calendarScreen.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{calendarSelected=Number(b.dataset.day);renderCalendar();});const pick=()=>{calendarScreen.querySelector('.cal-date-menu')?.remove();const menu=document.createElement('div');menu.className='cal-date-menu';menu.innerHTML='<button data-mark-month="4">5月17日　❤️</button><button data-mark-month="10">11月8日　🥳🎂🎊</button><button id="calMenuClose">关闭</button>';calendarScreen.append(menu);menu.querySelectorAll('[data-mark-month]').forEach(b=>b.onclick=()=>{calendarMonth=Number(b.dataset.markMonth);calendarSelected=calendarMonth===4?17:8;renderCalendar();});$('calMenuClose').onclick=()=>menu.remove();};$('calSearch').onclick=pick;$('calDates').onclick=pick;$('calInbox').onclick=()=>{const box=document.createElement('div');box.className='cal-date-menu';box.innerHTML='<p>没有邀请</p><button>完成</button>';box.querySelector('button').onclick=()=>box.remove();calendarScreen.append(box);};}
+$('calPrev').onclick=()=>changeCalendarMonth(-1);$('calNext').onclick=()=>changeCalendarMonth(1);$('calToday').onclick=()=>{calendarYear=2026;calendarMonth=10;calendarSelected=storyClockMinute>=24*60?8:7;renderCalendar();};calendarScreen.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{calendarSelected=Number(b.dataset.day);renderCalendar();});const pick=()=>{calendarScreen.querySelector('.cal-date-menu')?.remove();const menu=document.createElement('div');menu.className='cal-date-menu';menu.innerHTML='<button data-mark-month="4">5月17日　❤️</button><button data-mark-month="10">11月8日　🥳🎂🎊</button><button id="calMenuClose">关闭</button>';calendarScreen.append(menu);menu.querySelectorAll('[data-mark-month]').forEach(b=>b.onclick=()=>{calendarMonth=Number(b.dataset.markMonth);calendarSelected=calendarMonth===4?17:8;renderCalendar();});$('calMenuClose').onclick=()=>menu.remove();};$('calSearch').onclick=pick;$('calDates').onclick=pick;$('calInbox').onclick=()=>{const box=document.createElement('div');box.className='cal-date-menu';box.innerHTML='<p>没有邀请</p><button>完成</button>';box.querySelector('button').onclick=()=>box.remove();calendarScreen.append(box);};}
 function changeCalendarMonth(step){calendarMonth+=step;if(calendarMonth<0){calendarMonth=11;calendarYear--;}if(calendarMonth>11){calendarMonth=0;calendarYear++;}calendarSelected=Math.min(calendarSelected,new Date(calendarYear,calendarMonth+1,0).getDate());renderCalendar();}
 const beforeCalendarApp=openApp;openApp=function(name){if(name==='日历')return openCalendar();return beforeCalendarApp(name);};
 
@@ -2489,8 +2492,8 @@ openXixiChat=function(){
 const nmBeforeStoryPreview=openNetease;
 openNetease=function(page=nmCurrent){nmBeforeStoryPreview(page);if(page==='messages'){const row=$('content').querySelector('.nm-xixi-row');if(row){row.querySelector('small').textContent='[歌曲] 雁南飞：我们的岛在哪';row.querySelector('time').textContent='9月27日';}}};
 </script><script>
-function closeVirtualKeyboard(){const keyboard=$('virtualKeyboard');if(!keyboard)return;keyboard.remove();$('scriptInput')?.classList.remove('editing');}
-function dismissKeyboardOutside(event){if(!$('virtualKeyboard'))return;const target=event.target;if(target instanceof Element&&target.closest('#virtualKeyboard, #scriptInput'))return;closeVirtualKeyboard();}
+function closeVirtualKeyboard(){const keyboard=$('virtualKeyboard');if(!keyboard)return;keyboard.remove();$('scriptInput')?.classList.remove('editing');$('ownerSMSInput')?.classList.remove('editing');}
+function dismissKeyboardOutside(event){if(!$('virtualKeyboard'))return;const target=event.target;if(target instanceof Element&&target.closest('#virtualKeyboard, #scriptInput, #ownerSMSInput'))return;closeVirtualKeyboard();}
 document.addEventListener('pointerdown',dismissKeyboardOutside,true);
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeVirtualKeyboard();});
 </script><script>
@@ -3381,20 +3384,137 @@ function wcRefreshList(){
 </script>
 
 <script>
+const ownerSMSNumber='+86 (xxx) xxxx 3512';
+const ownerSMSMessages=[
+ {text:'您好，我是手机的主人，我的朋友已经联系到我了，谢谢您主动联系我'},
+ {text:'没关系的，举手之劳',outgoing:true},
+ {text:'不过我发现了你网易云的小秘密哦～',outgoing:true},
+ {text:'🤫'},
+ {text:'他敢悄悄给我发，还不让我偷偷看吗'},
+ {text:'难道这是这样吗🌚',outgoing:true},
+ {text:'你还暴露了他是我唯一的紧急联系人'},
+ {text:'欸？',outgoing:true},
+ {text:'你怎么知道？！',outgoing:true},
+ {text:'你没发现我的微信iPad也同步登陆了吗、'},
+ {text:'😯',outgoing:true}
+];
+let ownerSMSCount=0,ownerSMSBusy=false,ownerSMSDraft='',ownerSMSTyping=false;
+const ownerSMSThread={number:ownerSMSNumber,time:'23:57',text:ownerSMSMessages[0].text,read:false};
+function isOwnerSMSOpen(){
+ return !smsScreen.classList.contains('hidden') && !!$('ownerSMSInput');
+}
+function deliverOwnerSMS(){
+ if(ownerSMSCount)return;
+ ownerSMSCount=1;
+ setStoryClockStage('smsArrived');
+ smsThreads.unshift(ownerSMSThread);
+ if(!smsScreen.classList.contains('hidden') && !smsScreen.querySelector('.sms-thread-head'))openSMS();
+ const banner=document.createElement('button');
+ banner.className='message-banner';
+ banner.id='ownerSMSNotification';
+ banner.setAttribute('aria-label','信息，'+ownerSMSNumber+'，点击查看');
+ banner.innerHTML='<span class="banner-icon" aria-hidden="true">💬</span><span class="banner-copy"><span class="banner-top"><strong>'+ownerSMSNumber+'</strong><small>现在</small></span><span class="banner-text">'+escapeChat(ownerSMSThread.text)+'</span></span>';
+ banner.onclick=()=>{closeVirtualKeyboard();banner.remove();show('simSMS');openSMSThread(smsThreads.indexOf(ownerSMSThread));};
+ phoneRoot.append(banner);
+ setTimeout(()=>banner.remove(),8000);
+}
+const openBeforeOwnerSMSThread=openSMSThread;
+openSMSThread=function(index){
+ closeVirtualKeyboard();
+ if(smsThreads[index]!==ownerSMSThread)return openBeforeOwnerSMSThread(index);
+ closeGoosePlayer();
+ ownerSMSThread.read=true;
+ $('ownerSMSNotification')?.remove();
+ smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+ownerSMSNumber+' ›</strong></div><span></span></header><div class="sms-conversation" id="ownerSMSConversation"></div><div class="sms-compose"><span aria-hidden="true">＋</span><button class="owner-sms-input" id="ownerSMSInput" aria-label="短信输入框，打开虚拟键盘"></button><button id="ownerSMSSend" aria-label="发送短信">↑</button></div>';
+ $('smsBack').onclick=()=>{closeVirtualKeyboard();openSMS();};
+ $('ownerSMSInput').onclick=openVirtualKeyboard;
+ $('ownerSMSSend').onclick=sendOwnerSMSReply;
+ renderOwnerSMS();
+};
+function renderOwnerSMS(){
+ if(!isOwnerSMSOpen())return;
+ const conversation=$('ownerSMSConversation');
+ conversation.innerHTML='<p class="sms-date">11月7日 23:57</p>'+ownerSMSMessages.slice(0,ownerSMSCount).map((message,index)=>
+  (index===ownerSMSMessages.length-1?'<p class="sms-date">11月8日 00:00</p>':'')+
+  '<div class="sms-bubble'+(message.outgoing?' owner-sms-outgoing':'')+'">'+escapeChat(message.text)+'</div>').join('');
+ conversation.scrollTop=conversation.scrollHeight;
+ syncOwnerSMSInput();
+}
+function syncOwnerSMSInput(){
+ const input=$('ownerSMSInput');
+ if(!input)return;
+ const next=ownerSMSMessages[ownerSMSCount];
+ input.textContent=ownerSMSDraft;
+ input.disabled=!next?.outgoing || ownerSMSBusy;
+ input.classList.toggle('auto-typing',ownerSMSTyping);
+ $('ownerSMSSend').disabled=!next?.outgoing || ownerSMSBusy || ownerSMSTyping || ownerSMSDraft!==next.text;
+ const keyboardSend=$('keyboardReturn');
+ if(keyboardSend)keyboardSend.disabled=$('ownerSMSSend').disabled;
+}
+function beginOwnerSMSTyping(){
+ const next=ownerSMSMessages[ownerSMSCount];
+ if(!next?.outgoing || ownerSMSBusy || ownerSMSTyping || ownerSMSDraft)return;
+ ownerSMSTyping=true;
+ let position=0;
+ const type=()=>{
+  ownerSMSDraft=next.text.slice(0,++position);
+  if(position<next.text.length)setTimeout(type,75);
+  else ownerSMSTyping=false;
+  syncOwnerSMSInput();
+ };
+ type();
+}
+async function sendOwnerSMSReply(){
+ const next=ownerSMSMessages[ownerSMSCount];
+ if(!next?.outgoing || ownerSMSBusy || ownerSMSTyping || ownerSMSDraft!==next.text)return;
+ const sentIndex=ownerSMSCount;
+ ownerSMSCount++;
+ ownerSMSDraft='';
+ ownerSMSBusy=true;
+ ownerSMSThread.text=next.text;
+ if(sentIndex===2)setStoryClockStage('smsExchange');
+ if(sentIndex===5)setStoryClockStage('smsReveal');
+ if(sentIndex===ownerSMSMessages.length-1)setStoryClockStage('midnight');
+ renderOwnerSMS();
+ while(ownerSMSMessages[ownerSMSCount] && !ownerSMSMessages[ownerSMSCount].outgoing){
+  await chatDelay(1500);
+  ownerSMSThread.text=ownerSMSMessages[ownerSMSCount].text;
+  if(!isOwnerSMSOpen())ownerSMSThread.read=false;
+  ownerSMSCount++;
+  renderOwnerSMS();
+ }
+ ownerSMSBusy=false;
+ ownerSMSThread.time=$('statusTime').textContent;
+ if(ownerSMSCount===ownerSMSMessages.length)closeVirtualKeyboard();
+ if(isOwnerSMSOpen())syncOwnerSMSInput();
+ else if(!smsScreen.classList.contains('hidden') && !smsScreen.querySelector('.sms-thread-head'))openSMS();
+}
 const storyClockStages = {
  initial:{minute:23*60+48, ceiling:23*60+50, tickMs:25000},
  unlocked:{minute:23*60+51, ceiling:23*60+53, tickMs:20000},
  conversationComplete:{minute:23*60+54, ceiling:23*60+54, tickMs:20000},
- musicOpened:{minute:23*60+55, ceiling:23*60+55, tickMs:20000}
+ musicOpened:{minute:23*60+55, ceiling:23*60+57, tickMs:20000},
+ smsArrived:{minute:23*60+57, ceiling:23*60+57, tickMs:20000},
+ smsExchange:{minute:23*60+58, ceiling:23*60+58, tickMs:20000},
+ smsReveal:{minute:23*60+59, ceiling:23*60+59, tickMs:20000},
+ midnight:{minute:24*60, ceiling:24*60, tickMs:20000}
 };
 let storyClockStage='initial';
 let storyClockMinute=storyClockStages.initial.minute;
 let storyClockChangedAt=performance.now();
 function paintStoryClock(){
- const time=String(Math.floor(storyClockMinute/60)).padStart(2,'0')+':'+String(storyClockMinute%60).padStart(2,'0');
+ const time=String(Math.floor(storyClockMinute/60)%24).padStart(2,'0')+':'+String(storyClockMinute%60).padStart(2,'0');
  $('statusTime').textContent=time;
  $('lock').querySelector('.time').textContent=time;
- document.title='11月7日 '+time+' · 手机模拟器';
+ const midnight=storyClockMinute>=24*60;
+ const day=midnight?8:7;
+ const weekday=midnight?'星期日':'星期六';
+ $('lock').querySelector('.date').textContent='11月'+day+'日 '+weekday;
+ $('home').querySelector('.calendar .day').textContent=weekday;
+ $('home').querySelector('.calendar .num').textContent=String(day);
+ document.querySelectorAll('[data-story-calendar-weekday]').forEach(node=>node.textContent=weekday);
+ document.querySelectorAll('[data-story-calendar-day]').forEach(node=>node.textContent=String(day));
+ document.title='11月'+day+'日 '+time+' · 手机模拟器';
 }
 function setStoryClockStage(stage){
  const stages=Object.keys(storyClockStages);
@@ -3411,9 +3531,23 @@ function tickStoryClock(){
  if(minute===storyClockMinute)return;
  storyClockMinute=minute;
  paintStoryClock();
+ if(storyClockStage==='musicOpened' && storyClockMinute===23*60+57)deliverOwnerSMS();
 }
 paintStoryClock();
 setInterval(tickStoryClock,1000);
 document.addEventListener('visibilitychange',tickStoryClock);
 </script>
+<style>
+#ownerSMSNotification .banner-copy{min-width:0}
+#ownerSMSNotification .banner-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ownerSMSInput{flex:1;min-width:0;text-align:left;border:1px solid #ccc;border-radius:18px;padding:7px 12px;min-height:35px;background:transparent;white-space:pre-wrap}
+#ownerSMSInput:empty:before{content:'短信';color:#999}
+#ownerSMSSend{background:#34c759;color:#fff;border-radius:50%;width:29px;height:29px;flex-shrink:0}
+#ownerSMSSend:disabled{opacity:.35}
+#ownerSMSConversation{display:flex;flex-direction:column;gap:12px;min-height:0}
+#ownerSMSConversation .sms-bubble{align-self:flex-start;margin:0;max-width:80%}
+#ownerSMSConversation .owner-sms-outgoing{align-self:flex-end;background:#34c759;color:white}
+#ownerSMSConversation .owner-sms-outgoing:before{left:auto;right:-5px;background:#34c759;border-bottom-right-radius:0;border-bottom-left-radius:12px}
+#ownerSMSConversation .sms-date{align-self:center;margin:6px 0}
+</style>
 </body></html>
