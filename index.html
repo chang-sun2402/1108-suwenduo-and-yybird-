@@ -1240,6 +1240,7 @@ const nmGooseBeforeAudio=openGoosePlayer;
 openGoosePlayer=function(){nmSongAudio.pause();nmGooseBeforeAudio();};
 
 function nmNextAvailableSong(){
+ if(nmAudioKind==='endingName'){nmSongAudio.loop=false;return;}
  const playable=shChenPlaylist.map(([title])=>nmExtraKind(title)|| (title==='芳草地'?'fangcaodi':title==='我们俩'?'us':title==='爱你没差 刘瑞琦'?'love':title==='Out The Window'?'window':null)).filter(Boolean);
  if(!playable.length)return;
  const index=playable.indexOf(nmAudioKind),next=playable[(index+1)%playable.length];
@@ -3912,7 +3913,17 @@ flushBirthdayOutbox();
 
 const ownerBirthdayThanks='谢谢你啊，虽然我还不知道你叫什么长什么样子，但是谢谢你的生日祝福，谢谢你的帮忙，你以后也要开心健康，永远拥有自由拥有爱';
 let afterBirthdayStarted=false,finalSongDelivered=false,finalSongRead=false,finalSongEntered=false,finalPigDelivered=false;
-nmExtraTracks.endingName={title:'刻在我心底的名字',artist:'',src:'',cover:''};
+nmExtraTracks.endingName={title:'刻在我心底的名字',artist:'卢广仲',src:'assets/ending-name.mp3',cover:'assets/ending-name-cover.jpg'};
+nmSongAudioSources.endingName=nmExtraTracks.endingName.src;
+xixiAlbumCovers['刻在我心底的名字']=nmExtraTracks.endingName.cover;
+const nmBeforeEndingPlayer=openSharedSongPlayer;
+openSharedSongPlayer=function(kind){
+ nmBeforeEndingPlayer(kind);
+ if(kind!=='endingName')return;
+ nmSongAudio.loop=false;
+ const loop=$('goosePlayer')?.querySelector('.ss-controls button');
+ if(loop){loop.disabled=true;loop.setAttribute('aria-label','歌曲结束后停止');loop.setAttribute('aria-pressed','false');}
+};
 async function startAfterBirthdayStory(){
  if(afterBirthdayStarted)return;
  afterBirthdayStarted=true;
@@ -3988,10 +3999,15 @@ function deliverFinalPigMessage(){
  setTimeout(()=>banner.remove(),8000);
  runFinalWechatDialogue();
 }
+let finalSongAutoAttempted=false;
 function maybePlayFinalSong(){
+ if(finalSongAutoAttempted)return;
+ finalSongAutoAttempted=true;
  if(!nmSongAudio.paused && !nmSongAudio.ended)return;
+ if(nmAudioKind==='endingName' && nmSongAudio.ended)return;
  if(!nmSongAudioSources.endingName)return;
  nmSelectAudio('endingName');
+ nmSongAudio.loop=false;
  nmRememberSong('endingName');
  nmSongAudio.play().catch(()=>{});
 }
@@ -4015,15 +4031,26 @@ async function runFinalWechatDialogue(){
  await chatDelay(1500);
  appendFinalOwnerMessage('[语音]',true);
 }
-let endingVoiceAudio=null;
+let endingVoiceAudio=null,pausedMusicForVoice=null;
+function resumeMusicAfterVoice(){
+ const paused=pausedMusicForVoice;
+ pausedMusicForVoice=null;
+ if(!paused || nmAudioKind!==paused.kind || nmSongAudio.src!==paused.src || nmSongAudio.ended || !nmSongAudio.paused)return;
+ nmSongAudio.play().catch(()=>{});
+}
 function playEndingVoice(button){
  if(!endingVoiceAudio){
   endingVoiceAudio=new Audio('assets/owner-final-voice.wav');
-  endingVoiceAudio.addEventListener('ended',()=>{endingVoiceAudio.currentTime=0;paintEndingVoice(false);});
+  endingVoiceAudio.addEventListener('ended',()=>{endingVoiceAudio.currentTime=0;paintEndingVoice(false);resumeMusicAfterVoice();});
   endingVoiceAudio.addEventListener('pause',()=>paintEndingVoice(false));
+  endingVoiceAudio.addEventListener('error',()=>{paintEndingVoice(false);resumeMusicAfterVoice();});
  }
  if(!endingVoiceAudio.paused){endingVoiceAudio.pause();return;}
- endingVoiceAudio.play().then(()=>paintEndingVoice(true)).catch(()=>{button.setAttribute('aria-label','语音未能播放，点击重试');});
+ if(!nmSongAudio.paused && !nmSongAudio.ended){
+  pausedMusicForVoice={kind:nmAudioKind,src:nmSongAudio.src};
+  nmSongAudio.pause();
+ }
+ endingVoiceAudio.play().then(()=>paintEndingVoice(true)).catch(()=>{button.setAttribute('aria-label','语音未能播放，点击重试');resumeMusicAfterVoice();});
 }
 function paintEndingVoice(playing){
  document.querySelectorAll('[data-ending-voice]').forEach(button=>{
