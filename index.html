@@ -186,13 +186,13 @@ const wcIcons=[wcSvg('<path d="M24 13c0 5-4.5 9-10 9-1.3 0-2.7-.3-4-.7L5 24l1.1-
 function wcAvatar(c){if(c.isGroup)return '<span class="wc-avatar wc-group-avatar '+(c.avatarMembers?.length===3?'wc-group-avatar-three':c.avatarMembers?.length===4?'wc-group-avatar-four':'')+'" role="img" aria-label="'+c.name+'群头像">'+(c.avatarMembers||c.members).slice(0,9).map(m=>'<img src="'+m.avatar+'" alt="">').join('')+'</span>';return c.avatar?'<img class="wc-avatar" src="'+c.avatar+'" alt="'+c.name+'的头像">':'<span class="wc-avatar neutral">'+c.name.slice(0,1)+'</span>';}
 let pigMessageDelivered=false,pigMessageRead=false;
 function deliverPigMessage(){
- if(pigMessageDelivered)return;pigMessageDelivered=true;
+ if(pigMessageDelivered)return;pigMessageDelivered=true;wcRefreshList();
  const banner=document.createElement('button');banner.className='message-banner';banner.id='pigNotification';banner.setAttribute('aria-label','微信，🐷：你打开了吗？点击查看');
  banner.innerHTML='<span class="banner-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><ellipse cx="16" cy="16" rx="13" ry="10" fill="white"/><path d="m7 21-2 7 8-5" fill="white"/><ellipse cx="27" cy="26" rx="11" ry="9" fill="#ddffe4"/><path d="m32 31 5 5-1-8" fill="#ddffe4"/><g fill="#12b64f"><circle cx="11" cy="14" r="1.5"/><circle cx="20" cy="14" r="1.5"/><circle cx="23" cy="24" r="1.3"/><circle cx="30" cy="24" r="1.3"/></g></svg></span><span class="banner-copy"><span class="banner-top"><strong>🐷</strong><small>现在</small></span><span class="banner-text">你打开了吗？</span></span>';
  banner.onclick=()=>wcOpenChat(wcContacts.find(c=>c.name==='🐷'));phoneRoot.append(banner);
  setTimeout(()=>{if(!banner.isConnected)return;if(reducedMotion()){banner.remove();return;}banner.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(calc(-100% - 80px))',opacity:0}],{duration:360,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished.then(()=>banner.remove()).catch(()=>banner.remove());},5000);
 }
-function wcRows(query=''){const list=$('wcList');list.replaceChildren();wcContacts.filter(c=>c.name.toLowerCase().includes(query.toLowerCase())).forEach(c=>{const b=document.createElement('button');b.className='wc-row'+(c.pinned?' pinned':'');b.setAttribute('aria-label',c.name+(c.pinned?'，置顶':''));b.innerHTML=wcAvatar(c)+'<span class="wc-rowtext"><span class="wc-name">'+c.name+'</span><div class="wc-preview">'+(c.name==='🐷'&&pigMessageDelivered?'你打开了吗？':c.preview||'')+'</div></span>'+(c.name==='🐷'&&pigMessageDelivered&&!pigMessageRead?'<span class="wc-unread">1</span>':'');b.onclick=()=>wcOpenChat(c);list.append(b)});}
+function wcRows(query=''){const list=$('wcList');list.replaceChildren();wcContacts.filter(c=>c.name.toLowerCase().includes(query.toLowerCase())).forEach(c=>{const b=document.createElement('button');b.className='wc-row'+(c.pinned?' pinned':'');b.setAttribute('aria-label',c.name+(c.pinned?'，置顶':''));b.innerHTML=wcAvatar(c)+'<span class="wc-rowtext"><span class="wc-name">'+c.name+'</span><div class="wc-preview">'+escapeChat(wcLatestPreview(c))+'</div></span>'+(c.name==='🐷'&&pigMessageDelivered&&!pigMessageRead?'<span class="wc-unread">1</span>':'');b.onclick=()=>wcOpenChat(c);list.append(b)});}
 function wcTabs(active){const nav=document.createElement('nav');nav.className='wc-tabs';['微信','通讯录','发现','我'].forEach((name,i)=>{const b=document.createElement('button');b.className='wc-tab'+(i===active?' active':'');b.dataset.wcTab=String(i);b.setAttribute('aria-label',name);b.setAttribute('aria-current',i===active?'page':'false');b.innerHTML=wcIcons[i]+'<span>'+name+'</span>';b.onclick=()=>openWechat(i);nav.append(b)});return nav;}
 function openWechat(active=0){show('wechat');const root=$('wechat');root.innerHTML='<header class="wc-header"><div class="wc-titlebar"><button class="wc-close" id="wcExit" aria-label="返回手机桌面">‹</button><span>'+['微信','通讯录','发现','我'][active]+'</span><button class="wc-plus" id="wcPlus" aria-label="微信更多功能">⊕</button></div></header>';$('wcExit').onclick=()=>show('home');$('wcPlus').onclick=()=>{const menu=$('wcMenu');if(menu){menu.remove();return;}const box=document.createElement('div');box.id='wcMenu';box.style.cssText='position:absolute;right:10px;top:100px;z-index:9;background:#4c4c4c;color:white;border-radius:7px;padding:14px 20px;font-size:14px';box.textContent='发起群聊　　添加朋友';root.append(box)};
 if(active===0){root.firstChild.insertAdjacentHTML('beforeend','<div class="wc-searchwrap"><label class="wc-searchbox">'+wcSvg('<circle cx="12" cy="12" r="8"/><path d="m18 18 7 7"/>')+'<input id="wcSearch" placeholder="搜索" aria-label="搜索聊天"></label></div><div class="wc-mac">'+wcSvg('<rect x="3" y="4" width="22" height="16" rx="1"/><path d="M10 24h8m-4-4v4"/>')+'<span>已登录 iPad</span></div>');const list=document.createElement('div');list.className='wc-list';list.id='wcList';root.append(list);wcRows();$('wcSearch').oninput=e=>wcRows(e.target.value);}else{const body=document.createElement('div');body.className='wc-tabbody';if(active===1){wcContacts.filter(c=>!c.isGroup).forEach(c=>{const b=document.createElement('button');b.className='wc-row';b.innerHTML=wcAvatar(c)+'<span class="wc-name">'+c.name+'</span>';b.onclick=()=>wcOpenChat(c);body.append(b)})}else if(active===2){body.innerHTML='<div class="wc-directory">朋友圈</div><div class="wc-directory" style="margin-top:10px">扫一扫</div><div class="wc-directory">摇一摇</div>'}else{body.innerHTML='<div class="wc-directory" style="padding:32px 20px">微信</div><div class="wc-directory" style="margin-top:10px">收藏</div><div class="wc-directory">设置</div>'}root.append(body)}root.append(wcTabs(active));}
@@ -487,7 +487,7 @@ function renderChatMessages(c){
  }).join('');
  body.scrollTop=body.scrollHeight;syncPigTitle();
 }
-function refreshPigChat(){if(activeChat==='🐷')renderChatMessages(wcContacts.find(c=>c.name==='🐷'));}
+function refreshPigChat(){if(activeChat==='🐷')renderChatMessages(wcContacts.find(c=>c.name==='🐷'));else wcRefreshList();}
 function syncScriptInput(){
  const input=$('scriptInput');if(!input||activeChat!=='🐷')return;
  input.textContent=scriptedReply.draft;
@@ -3338,5 +3338,36 @@ renderChatMessages=function(contact){
  }).join('');
  body.scrollTop=body.scrollHeight;
 };
+</script>
+
+<script>
+const wcHistorySources = new Map([
+ [wcHainanGroup, wcHainanMessages],
+ [wcCrewGroup, [...wcCrewSchedule, ...wcWrapMessages]],
+ [wcFamilyGroup, wcFamilyMessages],
+ [wcBowenContact, wcBowenMessages],
+ [wcHenryContact, wcHenryMessages],
+ [wcLuluContact, wcLuluMessages],
+ [wcLonggeContact, wcLonggeMessages],
+ [wcJonathanContact, wcJonathanMessages]
+]);
+function wcLatestPreview(contact){
+ let message;
+ if(contact.name==='🐷'){
+  message=pigConversation.at(-1);
+  if(!message)message=pigMessageDelivered ? {text:'你打开了吗？'} : pigHistory.at(-1);
+ }else{
+  message=wcHistorySources.get(contact)?.at(-1);
+ }
+ if(!message)return '';
+ const text=message.image ? (message.photo ? '[图片]' : '[表情包]') : message.text;
+ if(!contact.isGroup || !message.speaker)return text;
+ return message.speaker+'：'+text;
+}
+function wcRefreshList(){
+ const list=$('wcList');
+ if(!list || $('wechat').classList.contains('hidden'))return;
+ wcRows($('wcSearch')?.value || '');
+}
 </script>
 </body></html>
