@@ -563,9 +563,9 @@ function openVirtualKeyboard(){
 function wcOpenChat(c){
  show('wechat');activeChat=c.name;if(c.name==='🐷'){pigMessageRead=true;$('pigNotification')?.remove();}
  const root=$('wechat');root.innerHTML='<header class="wc-chathead"><button id="wcChatBack" aria-label="返回微信列表">‹</button><span>'+c.name+(c.isGroup?'（'+(c.members.length+1)+'）':'')+'</span>'+(c.isGroup?'<button id="wcGroupInfo" aria-label="查看群成员">···</button>':'')+'</header><div class="wc-chatbody" role="log" aria-live="polite"></div><div class="wc-compose"><span aria-hidden="true">⊙</span><button type="button" class="script-input" id="scriptInput" aria-label="消息输入框，打开虚拟键盘"></button><span aria-hidden="true">☺</span><span aria-hidden="true">⊕</span></div>';
- renderChatMessages(c);syncScriptInput();$('scriptInput').onclick=openVirtualKeyboard;
+ renderChatMessages(c);syncScriptInput();wcInstallHistoryJump();$('scriptInput').onclick=openVirtualKeyboard;
  if(c.name==='🐷' && finalPigDelivered)maybePlayFinalSong();
- if(c.isGroup)$('wcGroupInfo').onclick=()=>{const body=root.querySelector('.wc-chatbody');const members=wcVisibleGroupMembers(c);body.innerHTML='<div class="wc-member-grid">'+members.map(m=>'<button class="wc-member">'+wcAvatar(m)+'<span>'+m.name+'</span></button>').join('')+'</div>';body.querySelectorAll('button.wc-member').forEach((b,i)=>b.onclick=()=>members[i].isSelf?openWechat(3):wcOpenChat(members[i]));};
+ if(c.isGroup)$('wcGroupInfo').onclick=()=>{$('wcHistoryJump')?.remove();const body=root.querySelector('.wc-chatbody');const members=wcVisibleGroupMembers(c);body.innerHTML='<div class="wc-member-grid">'+members.map(m=>'<button class="wc-member">'+wcAvatar(m)+'<span>'+m.name+'</span></button>').join('')+'</div>';body.querySelectorAll('button.wc-member').forEach((b,i)=>b.onclick=()=>members[i].isSelf?openWechat(3):wcOpenChat(members[i]));};
  $('wcChatBack').onclick=()=>{activeChat=null;openWechat();};
 }
 
@@ -4659,7 +4659,7 @@ function maybeShowEndingLetter(){
  endingLetterStarted=true;
  closeVirtualKeyboard();
  document.querySelectorAll('.message-banner').forEach(banner=>banner.remove());
- createEndingLetter(phoneRoot);
+ createEndingLetter(phoneRoot,{onExit:()=>{wcHistoryJumpEnabled=true;wcInstallHistoryJump();}});
 }
 nmSongAudio.addEventListener('ended',()=>{
  if(nmAudioKind!=='endingName')return;
@@ -4667,4 +4667,27 @@ nmSongAudio.addEventListener('ended',()=>{
  maybeShowEndingLetter();
 });
 </script>
+
+<script>
+let wcHistoryJumpEnabled=false;
+function wcInstallHistoryJump(){
+ const root=$('wechat');
+ root.querySelector('#wcHistoryJump')?.remove();
+ if(!wcHistoryJumpEnabled || !activeChat || root.classList.contains('hidden'))return;
+ const body=root.querySelector('.wc-chatbody');
+ if(!body || body.querySelector('.wc-member-grid'))return;
+ const button=document.createElement('button');
+ button.id='wcHistoryJump';button.type='button';button.className='wc-history-jump';
+ button.setAttribute('aria-label','回到最早的聊天记录');
+ button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7M5 19l7-7 7 7"/></svg><span>最早消息</span>';
+ button.onclick=()=>{closeVirtualKeyboard();body.scrollTo({top:0,behavior:reducedMotion()?'instant':'smooth'});};
+ root.append(button);
+}
+</script>
+<style>
+.wc-history-jump{position:absolute;right:0;top:112px;z-index:8;display:flex;align-items:center;gap:6px;padding:11px 16px 11px 13px;border:0;border-radius:28px 0 0 28px;background:#292929;color:#07c160;font:15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;box-shadow:0 2px 8px #0001;cursor:pointer}
+.wc-history-jump svg{width:20px;height:20px;flex-shrink:0}
+.wc-history-jump:active{background:#353535}
+.wc-history-jump:focus-visible{outline:2px solid #07c160;outline-offset:2px}
+</style>
 </body></html>

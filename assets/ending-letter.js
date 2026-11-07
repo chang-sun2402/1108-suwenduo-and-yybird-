@@ -23,7 +23,7 @@
    '生日快乐。'
   ],birthdayIndex:5}
  ];
- window.createEndingLetter=function(host,{speed=1,onComplete=()=>{}}={}){
+ window.createEndingLetter=function(host,{speed=1,onComplete=()=>{},onExit=()=>{}}={}){
   let cancelled=false,timer=null,complete=false,follow=true,currentSpeed=speed;
   const overlay=document.createElement('section');
   overlay.className='ending-letter';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','suwenduo_与yybird来电');overlay.tabIndex=-1;
@@ -64,7 +64,7 @@
     }
     if(stage<letters.length-1){
      overlay.dataset.stage='holding';
-     await delay(15000);if(cancelled)return;
+     await delay(10000);if(cancelled)return;
      overlay.dataset.stage='fading';
      overlay.style.setProperty('--ending-fade-duration',(reduced?0:3000/currentSpeed)+'ms');
      overlay.classList.add('is-fading');
@@ -74,7 +74,11 @@
      await delay(reduced?0:600);if(cancelled)return;
     }
    }
-   if(!cancelled)finish();
+   if(!cancelled){
+    finish();
+    await delay(10000);if(cancelled)return;
+    overlay.remove();onExit();
+   }
   })();
   return {
    element:overlay,
