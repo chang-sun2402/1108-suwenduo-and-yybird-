@@ -195,7 +195,7 @@ function deliverPigMessage(){
 function wcRows(query=''){const list=$('wcList');list.replaceChildren();wcContacts.filter(c=>c.name.toLowerCase().includes(query.toLowerCase())).forEach(c=>{const b=document.createElement('button');b.className='wc-row'+(c.pinned?' pinned':'');b.setAttribute('aria-label',c.name+(c.pinned?'，置顶':''));b.innerHTML=wcAvatar(c)+'<span class="wc-rowtext"><span class="wc-name">'+c.name+'</span><div class="wc-preview">'+(c.name==='🐷'&&pigMessageDelivered?'你打开了吗？':c.preview||'')+'</div></span>'+(c.name==='🐷'&&pigMessageDelivered&&!pigMessageRead?'<span class="wc-unread">1</span>':'');b.onclick=()=>wcOpenChat(c);list.append(b)});}
 function wcTabs(active){const nav=document.createElement('nav');nav.className='wc-tabs';['微信','通讯录','发现','我'].forEach((name,i)=>{const b=document.createElement('button');b.className='wc-tab'+(i===active?' active':'');b.dataset.wcTab=String(i);b.setAttribute('aria-label',name);b.setAttribute('aria-current',i===active?'page':'false');b.innerHTML=wcIcons[i]+'<span>'+name+'</span>';b.onclick=()=>openWechat(i);nav.append(b)});return nav;}
 function openWechat(active=0){show('wechat');const root=$('wechat');root.innerHTML='<header class="wc-header"><div class="wc-titlebar"><button class="wc-close" id="wcExit" aria-label="返回手机桌面">‹</button><span>'+['微信','通讯录','发现','我'][active]+'</span><button class="wc-plus" id="wcPlus" aria-label="微信更多功能">⊕</button></div></header>';$('wcExit').onclick=()=>show('home');$('wcPlus').onclick=()=>{const menu=$('wcMenu');if(menu){menu.remove();return;}const box=document.createElement('div');box.id='wcMenu';box.style.cssText='position:absolute;right:10px;top:100px;z-index:9;background:#4c4c4c;color:white;border-radius:7px;padding:14px 20px;font-size:14px';box.textContent='发起群聊　　添加朋友';root.append(box)};
-if(active===0){root.firstChild.insertAdjacentHTML('beforeend','<div class="wc-searchwrap"><label class="wc-searchbox">'+wcSvg('<circle cx="12" cy="12" r="8"/><path d="m18 18 7 7"/>')+'<input id="wcSearch" placeholder="搜索" aria-label="搜索聊天"></label></div><div class="wc-mac">'+wcSvg('<rect x="3" y="4" width="22" height="16" rx="1"/><path d="M10 24h8m-4-4v4"/>')+'<span>已登录 Mac</span></div>');const list=document.createElement('div');list.className='wc-list';list.id='wcList';root.append(list);wcRows();$('wcSearch').oninput=e=>wcRows(e.target.value);}else{const body=document.createElement('div');body.className='wc-tabbody';if(active===1){wcContacts.filter(c=>!c.isGroup).forEach(c=>{const b=document.createElement('button');b.className='wc-row';b.innerHTML=wcAvatar(c)+'<span class="wc-name">'+c.name+'</span>';b.onclick=()=>wcOpenChat(c);body.append(b)})}else if(active===2){body.innerHTML='<div class="wc-directory">朋友圈</div><div class="wc-directory" style="margin-top:10px">扫一扫</div><div class="wc-directory">摇一摇</div>'}else{body.innerHTML='<div class="wc-directory" style="padding:32px 20px">微信</div><div class="wc-directory" style="margin-top:10px">收藏</div><div class="wc-directory">设置</div>'}root.append(body)}root.append(wcTabs(active));}
+if(active===0){root.firstChild.insertAdjacentHTML('beforeend','<div class="wc-searchwrap"><label class="wc-searchbox">'+wcSvg('<circle cx="12" cy="12" r="8"/><path d="m18 18 7 7"/>')+'<input id="wcSearch" placeholder="搜索" aria-label="搜索聊天"></label></div><div class="wc-mac">'+wcSvg('<rect x="3" y="4" width="22" height="16" rx="1"/><path d="M10 24h8m-4-4v4"/>')+'<span>已登录 iPad</span></div>');const list=document.createElement('div');list.className='wc-list';list.id='wcList';root.append(list);wcRows();$('wcSearch').oninput=e=>wcRows(e.target.value);}else{const body=document.createElement('div');body.className='wc-tabbody';if(active===1){wcContacts.filter(c=>!c.isGroup).forEach(c=>{const b=document.createElement('button');b.className='wc-row';b.innerHTML=wcAvatar(c)+'<span class="wc-name">'+c.name+'</span>';b.onclick=()=>wcOpenChat(c);body.append(b)})}else if(active===2){body.innerHTML='<div class="wc-directory">朋友圈</div><div class="wc-directory" style="margin-top:10px">扫一扫</div><div class="wc-directory">摇一摇</div>'}else{body.innerHTML='<div class="wc-directory" style="padding:32px 20px">微信</div><div class="wc-directory" style="margin-top:10px">收藏</div><div class="wc-directory">设置</div>'}root.append(body)}root.append(wcTabs(active));}
 const scriptedLines=['我打开了','因为你是这部手机唯一的紧急联系人','对啊','我找错了吗🫪','备注都是🐷，没错呀','好的'];
 const scriptedReply={text:scriptedLines[0],draft:'',typing:false,sent:false,index:0,ready:true};
 const pigConversation=[];
@@ -2420,14 +2420,6 @@ const nmUpdatedStory=[
   "kind": "share2"
  },
  {
-  "date": "7月17日 21:56",
-  "type": "song",
-  "speaker": "🐷",
-  "title": "妥协",
-  "text": "",
-  "kind": "share10"
- },
- {
   "date": "7月28日 20:55",
   "type": "song",
   "speaker": "🐷",
@@ -2879,9 +2871,6 @@ wcLuluContact.preview="好，一起吃";
 const wcBeforeLuluRender=renderChatMessages;
 renderChatMessages=function(c){if(c!==wcLuluContact)return wcBeforeLuluRender(c);const body=$('wechat').querySelector('.wc-chatbody');body.innerHTML=wcLuluMessages.map(m=>{const stamp=m.stamp?'<div class="wc-group-stamp">'+m.stamp+'</div>':'';return stamp+(m.speaker==='陈思罕'?'<div class="wc-message wc-group-message outgoing"><div class="wc-bubble">'+escapeChat(m.text)+'</div>'+wcSelfAvatar()+'</div>':'<div class="wc-message wc-group-message">'+wcAvatar(c)+'<div class="wc-bubble">'+escapeChat(m.text)+'</div></div>');}).join('');body.scrollTop=body.scrollHeight;};
 </script><script>
-const wcGangGroup={name:'港三少',isGroup:true,members:[wcContacts.find(c=>c.name==='⬅️77'),wcContacts.find(c=>c.name==='肘纳森')]};
-wcGangGroup.avatarMembers=[{name:'我',avatar:wcSelfPhoto},...wcGangGroup.members];
-wcContacts.push(wcGangGroup);
 </script><style>
 .nm-emergency-banner .banner-icon{background:#e93843;overflow:hidden}
 .nm-emergency-banner .banner-icon img{width:100%;height:100%;object-fit:cover}
