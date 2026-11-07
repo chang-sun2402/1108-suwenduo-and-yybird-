@@ -3487,6 +3487,7 @@ async function sendOwnerSMSReply(){
  }
  ownerSMSBusy=false;
  ownerSMSThread.time=$('statusTime').textContent;
+ if(ownerSMSMessages[sentIndex+1]?.outgoing)beginOwnerSMSTyping();
  if(ownerSMSCount===ownerSMSMessages.length){closeVirtualKeyboard();startBirthdayNotifications();}
  if(isOwnerSMSOpen())syncOwnerSMSInput();
  else if(!smsScreen.classList.contains('hidden') && !smsScreen.querySelector('.sms-thread-head'))openSMS();
@@ -3693,13 +3694,10 @@ function startBirthdayNotifications(){
  wcBirthdayStarted=true;
  const queue=wcBirthdayWishes.flatMap(wish=>wish.messages.map(text=>({contact:wcContacts.find(contact=>contact.name===wish.name),text})));
  document.querySelectorAll('.message-banner').forEach(banner=>banner.remove());
- const banner=document.createElement('button');
- banner.id='birthdayNotification';
- banner.className='message-banner birthday-notification';
- phoneRoot.append(banner);
+ let banner;
  let index=0;
  function deliverNext(){
-  if(index===queue.length){banner.remove();return;}
+  if(index===queue.length){banner?.remove();return;}
   const {contact,text}=queue[index++];
   const received=wcBirthdayReceived.get(contact) || {messages:[],unread:0};
   received.messages.push({text});
@@ -3708,15 +3706,30 @@ function startBirthdayNotifications(){
   wcBirthdayReceived.set(contact,received);
   if(inChat)renderChatMessages(contact);
   wcRefreshList();
+  const previous=banner;
+  previous?.removeAttribute('id');
+  if(previous)previous.style.pointerEvents='none';
+  banner=document.createElement('button');
+  banner.id='birthdayNotification';
+  banner.className='message-banner birthday-notification';
+  banner.style.zIndex=30+index;
   banner.setAttribute('aria-label','微信，'+contact.name+'：'+text+'，点击查看');
   banner.innerHTML='<span class="banner-icon">'+wcAvatar(contact)+'</span><span class="banner-copy"><span class="banner-top"><strong>'+escapeChat(contact.name)+'</strong><small>现在</small></span><span class="banner-text">'+escapeChat(text)+'</span></span>';
   banner.onclick=()=>{closeVirtualKeyboard();closeGoosePlayer();wcOpenChat(contact);};
+  phoneRoot.append(banner);
+  const duration=reducedMotion()?0:280;
+  banner.animate(
+   [{transform:'translateY(calc(-100% - 70px))'},{transform:'translateY(0)'}],
+   {duration,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}
+  );
+  setTimeout(()=>previous?.remove(),duration);
   setTimeout(deliverNext,500);
  }
  deliverNext();
 }
 </script>
 <style>
+.birthday-notification{animation:none}
 .birthday-notification .banner-copy{min-width:0;overflow:hidden}
 .birthday-notification .banner-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
 .birthday-notification .banner-icon{background:transparent;border-radius:10px;overflow:hidden}
