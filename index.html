@@ -3401,6 +3401,8 @@ const ownerSMSMessages=[
  {text:'😯',outgoing:true}
 ];
 let ownerSMSCount=0,ownerSMSBusy=false,ownerSMSDraft='',ownerSMSTyping=false;
+let ownerFreeWriting=false,ownerWishDraft='';
+const ownerBirthdayReplies=[];
 const ownerSMSThread={number:ownerSMSNumber,time:'23:57',text:ownerSMSMessages[0].text,read:false};
 function isOwnerSMSOpen(){
  return !smsScreen.classList.contains('hidden') && !!$('ownerSMSInput');
@@ -3429,8 +3431,23 @@ openSMSThread=function(index){
  $('ownerSMSNotification')?.remove();
  smsScreen.innerHTML='<header class="sms-thread-head"><button id="smsBack" aria-label="返回信息列表">‹</button><div><span class="sms-avatar">'+smsAvatar+'</span><strong>'+ownerSMSNumber+' ›</strong></div><span></span></header><div class="sms-conversation" id="ownerSMSConversation"></div><div class="sms-compose"><span aria-hidden="true">＋</span><button class="owner-sms-input" id="ownerSMSInput" aria-label="短信输入框，打开虚拟键盘"></button><button id="ownerSMSSend" aria-label="发送短信">↑</button></div>';
  $('smsBack').onclick=()=>{closeVirtualKeyboard();openSMS();};
- $('ownerSMSInput').onclick=openVirtualKeyboard;
- $('ownerSMSSend').onclick=sendOwnerSMSReply;
+ if(ownerFreeWriting){
+  const input=document.createElement('textarea');
+  input.id='ownerSMSInput';
+  input.rows=1;
+  input.placeholder='思罕会收到所有人的生日祝福哦～';
+  input.setAttribute('aria-label','给陈思罕写生日祝福');
+  input.value=ownerWishDraft;
+  $('ownerSMSInput').replaceWith(input);
+  input.oninput=()=>{ownerWishDraft=input.value;syncOwnerSMSInput();};
+  input.onkeydown=event=>{
+   if(event.key==='Enter' && (event.ctrlKey || event.metaKey) && !event.isComposing){event.preventDefault();sendOwnerBirthdayReply();}
+  };
+  $('ownerSMSSend').onclick=sendOwnerBirthdayReply;
+ }else{
+  $('ownerSMSInput').onclick=openVirtualKeyboard;
+  $('ownerSMSSend').onclick=sendOwnerSMSReply;
+ }
  renderOwnerSMS();
 };
 function renderOwnerSMS(){
@@ -3438,13 +3455,22 @@ function renderOwnerSMS(){
  const conversation=$('ownerSMSConversation');
  conversation.innerHTML='<p class="sms-date">11月7日 23:57</p>'+ownerSMSMessages.slice(0,ownerSMSCount).map((message,index)=>
   (index===ownerSMSMessages.length-1?'<p class="sms-date">11月8日 00:00</p>':'')+
-  '<div class="sms-bubble'+(message.outgoing?' owner-sms-outgoing':'')+'">'+escapeChat(message.text)+'</div>').join('');
+  '<div class="sms-bubble'+(message.outgoing?' owner-sms-outgoing':'')+'">'+escapeChat(message.text)+'</div>').join('')+
+  ownerBirthdayReplies.map(text=>'<div class="sms-bubble owner-sms-outgoing">'+escapeChat(text).replace(/\n/g,'<br>')+'</div>').join('');
  conversation.scrollTop=conversation.scrollHeight;
  syncOwnerSMSInput();
 }
 function syncOwnerSMSInput(){
  const input=$('ownerSMSInput');
  if(!input)return;
+ if(ownerFreeWriting){
+  input.disabled=false;
+  input.value=ownerWishDraft;
+  $('ownerSMSSend').disabled=!ownerWishDraft.trim();
+  input.style.height='auto';
+  input.style.height=Math.min(100,input.scrollHeight)+'px';
+  return;
+ }
  const next=ownerSMSMessages[ownerSMSCount];
  input.textContent=ownerSMSDraft;
  input.disabled=!next?.outgoing || ownerSMSBusy;
@@ -3454,6 +3480,7 @@ function syncOwnerSMSInput(){
  if(keyboardSend)keyboardSend.disabled=$('ownerSMSSend').disabled;
 }
 function beginOwnerSMSTyping(){
+ if(ownerFreeWriting)return;
  const next=ownerSMSMessages[ownerSMSCount];
  if(!next?.outgoing || ownerSMSBusy || ownerSMSTyping || ownerSMSDraft)return;
  ownerSMSTyping=true;
@@ -3467,6 +3494,7 @@ function beginOwnerSMSTyping(){
  type();
 }
 async function sendOwnerSMSReply(){
+ if(ownerFreeWriting){sendOwnerBirthdayReply();return;}
  const next=ownerSMSMessages[ownerSMSCount];
  if(!next?.outgoing || ownerSMSBusy || ownerSMSTyping || ownerSMSDraft!==next.text)return;
  const sentIndex=ownerSMSCount;
@@ -3491,6 +3519,16 @@ async function sendOwnerSMSReply(){
  if(ownerSMSCount===ownerSMSMessages.length){closeVirtualKeyboard();startBirthdayNotifications();}
  if(isOwnerSMSOpen())syncOwnerSMSInput();
  else if(!smsScreen.classList.contains('hidden') && !smsScreen.querySelector('.sms-thread-head'))openSMS();
+}
+function sendOwnerBirthdayReply(){
+ const text=ownerWishDraft.trim();
+ if(!ownerFreeWriting || !text)return;
+ ownerBirthdayReplies.push(text);
+ ownerWishDraft='';
+ ownerSMSThread.text=text;
+ ownerSMSThread.time='00:00';
+ renderOwnerSMS();
+ $('ownerSMSInput')?.focus({preventScroll:true});
 }
 const storyClockStages = {
  initial:{minute:23*60+48, ceiling:23*60+50, tickMs:25000},
@@ -3697,7 +3735,7 @@ function startBirthdayNotifications(){
  let banner;
  let index=0;
  function deliverNext(){
-  if(index===queue.length){banner?.remove();return;}
+  if(index===queue.length){banner?.remove();showBirthdayWritingInterlude();return;}
   const {contact,text}=queue[index++];
   const received=wcBirthdayReceived.get(contact) || {messages:[],unread:0};
   received.messages.push({text});
@@ -3727,8 +3765,40 @@ function startBirthdayNotifications(){
  }
  deliverNext();
 }
+let birthdayWritingStarted=false;
+async function showBirthdayWritingInterlude(){
+ if(birthdayWritingStarted)return;
+ birthdayWritingStarted=true;
+ closeVirtualKeyboard();
+ phoneRoot.inert=true;
+ const overlay=document.createElement('div');
+ overlay.className='birthday-writing-interlude';
+ overlay.id='birthdayWritingInterlude';
+ overlay.setAttribute('role','status');
+ const text=document.createElement('p');
+ text.textContent='我要不要也给陈思罕写一个生日祝福……';
+ overlay.append(text);
+ document.body.append(overlay);
+ const fade=reducedMotion()?0:600;
+ await overlay.animate([{opacity:0},{opacity:1}],{duration:fade,fill:'both'}).finished.catch(()=>{});
+ await text.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:fade,fill:'both'}).finished.catch(()=>{});
+ await chatDelay(2400);
+ ownerFreeWriting=true;
+ show('simSMS');
+ openSMSThread(smsThreads.indexOf(ownerSMSThread));
+ await overlay.animate([{opacity:1},{opacity:0}],{duration:fade,fill:'both'}).finished.catch(()=>{});
+ overlay.remove();
+ phoneRoot.inert=false;
+ $('ownerSMSInput')?.focus({preventScroll:true});
+}
 </script>
 <style>
+.birthday-writing-interlude{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;color:#fff}
+.birthday-writing-interlude p{margin:0;padding:28px;max-width:640px;text-align:center;font-size:clamp(18px,4.7vw,25px);font-weight:400;line-height:1.8;letter-spacing:.03em;opacity:0}
+#ownerSMSInput:is(textarea){resize:none;overflow-y:auto;font-family:inherit;white-space:pre-wrap}
+#ownerSMSInput:is(textarea):focus{outline:none;border-color:#aeb3be;box-shadow:0 0 0 2px #007aff12}
+#ownerSMSInput:is(textarea)::placeholder{font-size:12px;color:#a1a1a8;opacity:1;letter-spacing:0}
+#ownerSMSConversation .sms-bubble{white-space:pre-wrap}
 .birthday-notification{animation:none}
 .birthday-notification .banner-copy{min-width:0;overflow:hidden}
 .birthday-notification .banner-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
